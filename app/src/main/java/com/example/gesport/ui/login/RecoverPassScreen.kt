@@ -14,10 +14,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.gesport.R
-import com.example.gesport.ui.login.components.Input
-import com.example.gesport.ui.login.components.PrimaryButton
+import com.example.gesport.ui.components.Input
+import com.example.gesport.ui.components.PrimaryButton
 
 @Composable
 fun RecoverPassScreen(navController: NavController) {
@@ -35,58 +36,45 @@ fun RecoverPassScreen(navController: NavController) {
 
         // Card
         Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp)
-                .align(Alignment.Center),
-            color = Color.Black.copy(alpha = 0.75f),
-            shape = RoundedCornerShape(24.dp)
+            modifier = Modifier.fillMaxSize(),
+            color = Color.Black.copy(alpha = 0.70f),
         ) {
             Column(
                 modifier = Modifier.padding(20.dp),
                 verticalArrangement = Arrangement.spacedBy(15.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-
-                // Logo + títulos
-                Box(Modifier.fillMaxWidth()) {
+                // 🔹 TITULO + LOGO + SUBTÍTULO (ANTES DENTRO DEL HEADER)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(225.dp) // misma altura que el login
+                ) {
                     Column(
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .padding(top = 4.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        modifier = Modifier.align(Alignment.BottomStart),
+                        horizontalAlignment = Alignment.Start
                     ) {
-                        Image(
-                            painter = painterResource(R.drawable.logo),
-                            contentDescription = null,
-                            modifier = Modifier.size(65.dp)
-                        )
-                        Spacer(Modifier.height(6.dp))
-                        Text(
-                            text = "GeSport",
-                            color = Color.White,
-                            style = MaterialTheme.typography.headlineMedium.copy(
-                                fontWeight = FontWeight.ExtraBold
-                            ),
-                            textAlign = TextAlign.Center
-                        )
 
-                        Spacer(Modifier.height(2.dp))
+
+
+                        Spacer(Modifier.height(20.dp))
+
+                        // TÍTULO DEBAJO DEL NOMBRE
                         Text(
                             text = "Recuperar contraseña",
-                            color = Color.White.copy(alpha = 0.35f),
-                            style = MaterialTheme.typography.bodySmall,
-                            textAlign = TextAlign.Center
+                            color = Color.White,
+                            fontSize = 30.sp,
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
                 }
 
-                Spacer(Modifier.height(6.dp))
-
                 // Texto explicativo
                 Text(
                     text = "Introduce tu correo electrónico y, si se encuentra registrado en la base de datos, recibirás un email con las instrucciones para restablecer tu contraseña.",
-                    color = Color.White.copy(alpha = 0.65f)
+                    color = Color.White.copy(alpha = 0.65f),
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Normal
 
                 )
 
@@ -99,6 +87,8 @@ fun RecoverPassScreen(navController: NavController) {
                     placeholder = "Correo electrónico",
                     leadingIconRes = R.drawable.icon_email
                 )
+
+                Spacer(Modifier.width(1.dp))
 
 
                 // Botón "Enviar"

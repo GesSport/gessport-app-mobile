@@ -3,7 +3,8 @@ package com.example.gesport.data
 import com.example.gesport.models.User
 import com.example.gesport.repository.UserRepository
 
-class DataUserRepository: UserRepository {
+// SINGLETON: toda la app comparte la misma lista de usuarios
+object DataUserRepository : UserRepository {
 
     private val users = mutableListOf(
         User(
@@ -44,26 +45,32 @@ class DataUserRepository: UserRepository {
     )
 
     private fun getNewId(): Int {
-        return (users.maxOfOrNull { it.id } ?: 0) +1
+        return (users.maxOfOrNull { it.id } ?: 0) + 1
     }
 
     override suspend fun addUser(user: User): User {
-        var newId = getNewId()
-        val newUser = user.copy(id=newId)
+        val newId = getNewId()
+        val newUser = user.copy(id = newId)
         users.add(newUser)
         return newUser
     }
 
     override suspend fun getUserById(id: Int): User? {
-        return users.find{it.id == id}
+        return users.find { it.id == id }
     }
 
     override suspend fun updateUser(user: User): Boolean {
-        TODO("Not yet implemented")
+        val index = users.indexOfFirst { it.id == user.id }
+        return if (index != -1) {
+            users[index] = user
+            true
+        } else {
+            false
+        }
     }
 
     override suspend fun deleteUser(id: Int): Boolean {
-        TODO("Not yet implemented")
+        return users.removeIf { it.id == id }
     }
 
     override suspend fun getAllUsers(): List<User> {
@@ -73,4 +80,3 @@ class DataUserRepository: UserRepository {
     override suspend fun getUsersByRole(rol: String): List<User> =
         users.filter { it.rol == rol }
 }
-

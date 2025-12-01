@@ -1,4 +1,4 @@
-package com.example.gesport.ui.login.components
+package com.example.gesport.ui.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Spacer
@@ -27,9 +27,9 @@ fun PrimaryButton(
         modifier = Modifier
             .fillMaxWidth()
             .height(48.dp),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(4.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = Color(0xFF2DAAE1),
+            containerColor = Color(0xFF2DAAE1).copy(alpha = 0.40f),
             contentColor = Color.White
         )
     ) {
@@ -46,7 +46,7 @@ fun GoogleButton(
         modifier = Modifier
             .fillMaxWidth()
             .height(48.dp),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(4.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = Color.White,
             contentColor = Color.Black

@@ -1,4 +1,4 @@
-package com.example.gesport.ui.login.components
+package com.example.gesport.ui.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -36,14 +36,14 @@ fun Input(
                 painter = painterResource(leadingIconRes),
                 contentDescription = null,
                 modifier = Modifier
-                    .heightIn(max = 24.dp)
+                    .heightIn(max = 19.dp)
             )
         },
         singleLine = true,
         modifier = modifier
             .fillMaxWidth()
             .heightIn(min = 50.dp),
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(4.dp),
         colors = TextFieldDefaults.colors(
             focusedContainerColor = Color.White.copy(alpha = 0.28f),
             unfocusedContainerColor = Color.White.copy(alpha = 0.28f),
@@ -53,7 +53,7 @@ fun Input(
             focusedTextColor = Color.White,
             unfocusedTextColor = Color.White,
             selectionColors = TextSelectionColors(
-                handleColor = Color(0xFF2DAAE1),
+                handleColor = Color(0xFF2DAAE1).copy(alpha = 0.55f),
                 backgroundColor = Color(0xFF2DAAE1).copy(alpha = 0.4f)
             )
         )
@@ -95,7 +95,7 @@ fun PasswordInput(
         modifier = modifier
             .fillMaxWidth()
             .heightIn(min = 50.dp),
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(4.dp),
         colors = TextFieldDefaults.colors(
             focusedContainerColor = Color.White.copy(alpha = 0.28f),
             unfocusedContainerColor = Color.White.copy(alpha = 0.28f),
@@ -105,7 +105,7 @@ fun PasswordInput(
             focusedTextColor = Color.White,
             unfocusedTextColor = Color.White,
             selectionColors = TextSelectionColors(
-                handleColor = Color(0xFF2DAAE1),
+                handleColor = Color(0xFF2DAAE1).copy(alpha = 0.55f),
                 backgroundColor = Color(0xFF2DAAE1).copy(alpha = 0.4f)
             )
         )

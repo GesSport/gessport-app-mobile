@@ -2,7 +2,6 @@ package com.example.gesport.ui.login
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -12,13 +11,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.gesport.R
-import com.example.gesport.ui.login.components.Input
-import com.example.gesport.ui.login.components.PasswordInput
-import com.example.gesport.ui.login.components.PrimaryButton
+import com.example.gesport.ui.components.Input
+import com.example.gesport.ui.components.PasswordInput
+import com.example.gesport.ui.components.PrimaryButton
 
 @Composable
 fun RegisterScreen(navController: NavHostController) {
@@ -27,7 +26,6 @@ fun RegisterScreen(navController: NavHostController) {
     var phone by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
     var repeatPassword by rememberSaveable { mutableStateOf("") }
-
 
     Box(Modifier.fillMaxSize()) {
         // Fondo
@@ -38,55 +36,51 @@ fun RegisterScreen(navController: NavHostController) {
             contentScale = ContentScale.Crop
         )
 
-        // Card translúcida
+        // Capa oscura
         Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp)
-                .align(Alignment.Center),
-            color = Color.Black.copy(alpha = 0.75f),
-            shape = RoundedCornerShape(24.dp)
+            modifier = Modifier.fillMaxSize(),
+            color = Color.Black.copy(alpha = 0.70f),
         ) {
             Column(
                 modifier = Modifier.padding(20.dp),
                 verticalArrangement = Arrangement.spacedBy(15.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-
-                // Logo + títulos
-                Box(Modifier.fillMaxWidth()) {
+                // 🔹 TITULO + LOGO + SUBTÍTULO (ANTES DENTRO DEL HEADER)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(90.dp) // misma altura que el login
+                ) {
                     Column(
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .padding(top = 4.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        modifier = Modifier.align(Alignment.BottomStart),
+                        horizontalAlignment = Alignment.Start
                     ) {
-                        Image(
-                            painter = painterResource(R.drawable.logo),
-                            contentDescription = null,
-                            modifier = Modifier.size(65.dp)
-                        )
-                        Spacer(Modifier.height(6.dp))
-                        Text(
-                            text = "GeSport",
-                            color = Color.White,
-                            style = MaterialTheme.typography.headlineMedium.copy(
-                                fontWeight = FontWeight.ExtraBold
-                            ),
-                            textAlign = TextAlign.Center
-                        )
 
-                        Spacer(Modifier.height(2.dp))
+
+
+                        Spacer(Modifier.height(20.dp))
+
+                        // TÍTULO DEBAJO DEL NOMBRE
                         Text(
                             text = "Registro de usuario",
-                            color = Color.White.copy(alpha = 0.35f),
-                            style = MaterialTheme.typography.bodySmall,
-                            textAlign = TextAlign.Center
+                            color = Color.White,
+                            fontSize = 30.sp,
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
                 }
 
-                Spacer(Modifier.height(6.dp))
+                // Texto explicativo
+                Text(
+                    text = "Completa el formulario con tus datos personales para crear una nueva cuenta en GeSport. Asegúrate de que la información introducida sea correcta antes de enviar la solicitud.",
+                    color = Color.White.copy(alpha = 0.65f),
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Normal
+                )
+
+
+                Spacer(Modifier.height(1.dp))
 
                 // Nombre de usuario
                 Input(
@@ -96,7 +90,6 @@ fun RegisterScreen(navController: NavHostController) {
                     leadingIconRes = R.drawable.icon_user
                 )
 
-
                 // Correo electrónico
                 Input(
                     value = email,
@@ -104,7 +97,6 @@ fun RegisterScreen(navController: NavHostController) {
                     placeholder = "Correo electrónico",
                     leadingIconRes = R.drawable.icon_email
                 )
-
 
                 // Teléfono
                 Input(
@@ -114,14 +106,12 @@ fun RegisterScreen(navController: NavHostController) {
                     leadingIconRes = R.drawable.icon_phone
                 )
 
-
                 // Contraseña
                 PasswordInput(
                     value = password,
                     onValueChange = { password = it },
                     placeholder = "Contraseña"
                 )
-
 
                 // Repetir contraseña
                 PasswordInput(
@@ -130,8 +120,7 @@ fun RegisterScreen(navController: NavHostController) {
                     placeholder = "Repetir contraseña"
                 )
 
-
-                Spacer(Modifier.width(0.5.dp))
+                Spacer(Modifier.height(4.dp))
 
                 // Botón "Enviar solicitud"
                 PrimaryButton(
@@ -143,7 +132,7 @@ fun RegisterScreen(navController: NavHostController) {
                     }
                 )
 
-                // Botón "¿Ya tienes cuenta? ... "
+                // Botón "¿Ya tienes cuenta? ..."
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -166,5 +155,3 @@ fun RegisterScreen(navController: NavHostController) {
         }
     }
 }
-
-
