@@ -1,14 +1,11 @@
 package com.example.gesport.ui.backend.ges_user
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -17,10 +14,21 @@ import com.example.gesport.R
 import com.example.gesport.domain.LoginLogic
 import com.example.gesport.models.User
 import com.example.gesport.models.UserRoles
+import com.example.gesport.ui.components.GeSportBackgroundScreen
 import com.example.gesport.ui.components.Input
 import com.example.gesport.ui.components.PasswordInput
 import com.example.gesport.ui.components.PrimaryButton
 
+/**
+ * Pantalla de alta / edición de usuario.
+ *
+ * - Si `userId` es null → modo creación de usuario.
+ * - Si `userId` tiene valor → modo edición (carga los datos del usuario existente).
+ *
+ * Utiliza:
+ * - GesUserViewModel para leer/guardar usuarios en el repositorio.
+ * - LoginLogic para reutilizar las validaciones de nombre, email y contraseñas.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddUserScreen(
@@ -29,22 +37,27 @@ fun AddUserScreen(
     userId: Int? = null
 ) {
 
+    //
     val loginLogic = remember { LoginLogic() }
 
+    // true si estamos editando un usuario existente
     val isEditMode = userId != null
 
+    // Estados de los campos del formulario
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var repeatPassword by remember { mutableStateOf("") }
     var rol by remember { mutableStateOf("JUGADOR") } // por defecto
 
+    // Estados de error por campo
     var nameError by remember { mutableStateOf<String?>(null) }
     var emailError by remember { mutableStateOf<String?>(null) }
     var passwordError by remember { mutableStateOf<String?>(null) }
     var repeatPasswordError by remember { mutableStateOf<String?>(null) }
     var formError by remember { mutableStateOf<String?>(null) }
 
+    // Error global gestionado desde el ViewModel (por ejemplo, error al guardar)
     val vmError = viewModel.errorMessage
 
     // Cargar datos si estamos editando
@@ -52,12 +65,14 @@ fun AddUserScreen(
         if (userId != null) {
             viewModel.loadUserById(userId) { user ->
                 if (user != null) {
+                    // Rellenamos el formulario con los datos del usuario
                     name = user.name
                     email = user.email
                     password = user.password
                     repeatPassword = user.password
                     rol = user.rol
                 } else {
+                    // El id no existe en el repositorio
                     formError = "No se ha encontrado el usuario"
                 }
             }
@@ -67,19 +82,7 @@ fun AddUserScreen(
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-        // Fondo
-        Image(
-            painter = painterResource(R.drawable.background),
-            contentDescription = null,
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
-        )
-
-        // Capa oscura
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = Color.Black.copy(alpha = 0.70f),
-        ) {
+        GeSportBackgroundScreen {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -213,6 +216,7 @@ fun AddUserScreen(
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                         modifier = Modifier.padding(bottom = 8.dp)
                     ) {
+                        // Un chip por cada rol disponible en la app
                         UserRoles.allRoles.forEach { (roleKey, roleLabel) ->
                             FilterChip(
                                 selected = rol == roleKey,
@@ -246,14 +250,14 @@ fun AddUserScreen(
                     }
                 }
 
+                // Espacio para separar el formulario del botón inferior
                 Spacer(Modifier.height(200.dp))
-
 
                 // Botón Guardar
                 PrimaryButton(
                     text = if (isEditMode) "Guardar cambios" else "Crear usuario",
                     onClick = {
-                        // Reset de errores
+                        // Reset de errores antes de validar
                         nameError = null
                         emailError = null
                         passwordError = null
@@ -285,6 +289,7 @@ fun AddUserScreen(
                             repeatPasswordError = e.message
                         }
 
+                        // Solo continúa si no hay errores de validación
                         val isValid = nameError == null &&
                                 emailError == null &&
                                 passwordError == null &&
@@ -292,7 +297,9 @@ fun AddUserScreen(
 
                         if (!isValid) return@PrimaryButton
 
+                        // Construimos el objeto User a guardar
                         val user = User(
+                            // En modo crear se ignora y el repo asigna ID
                             id = userId ?: 0,
                             name = name.trim(),
                             email = email.trim(),
@@ -300,6 +307,7 @@ fun AddUserScreen(
                             rol = rol
                         )
 
+                        // Llamamos al ViewModel según el modo
                         if (isEditMode) {
                             viewModel.updateUser(user)
                         } else {

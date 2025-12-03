@@ -9,6 +9,16 @@ import com.example.gesport.models.User
 import com.example.gesport.repository.UserRepository
 import kotlinx.coroutines.launch
 
+/**
+ * ViewModel responsable de la gestión de usuarios para la parte de backend (GesUser).
+ *
+ * Se encarga de:
+ * - Cargar la lista de usuarios desde el repositorio.
+ * - Mantener en memoria la lista completa y la lista filtrada.
+ * - Aplicar filtros por rol y por texto de búsqueda.
+ * - Crear, actualizar y eliminar usuarios.
+ * - Exponer estados de carga y error para que la UI los muestre.
+ */
 class GesUserViewModel(
     private val userRepository: UserRepository
 ) : ViewModel() {
@@ -36,6 +46,7 @@ class GesUserViewModel(
     val errorMessage: String? get() = _errorMessage
 
     init {
+        // Al crear el ViewModel se carga la lista inicial de usuarios
         refreshUsers()
     }
 
@@ -46,7 +57,9 @@ class GesUserViewModel(
                 _isLoading = true
                 _errorMessage = null
 
+                // Obtiene todos los usuarios desde el repositorio
                 _allUsers = userRepository.getAllUsers()
+                // Aplica filtros activos (rol + búsqueda) sobre la lista completa
                 applyFilters()
             } catch (e: Exception) {
                 _errorMessage = e.message ?: "Error al cargar los usuarios"
@@ -77,6 +90,7 @@ class GesUserViewModel(
             }
         }
 
+        // Actualiza la lista que consume directamente la UI
         _users = filtered
     }
 
@@ -99,8 +113,10 @@ class GesUserViewModel(
                 _isLoading = true
                 _errorMessage = null
 
+                // Inserta el nuevo usuario en el repositorio
                 userRepository.addUser(user)
 
+                // Recarga la lista completa tras la inserción y vuelve a filtrar
                 _allUsers = userRepository.getAllUsers()
                 applyFilters()
             } catch (e: Exception) {
@@ -118,11 +134,13 @@ class GesUserViewModel(
                 _isLoading = true
                 _errorMessage = null
 
+                // Intenta actualizar el usuario en el repositorio
                 val ok = userRepository.updateUser(user)
                 if (!ok) {
                     _errorMessage = "Este usuario ya no existe"
                 }
 
+                // Recarga la lista completa tras la actualización y vuelve a filtrar
                 _allUsers = userRepository.getAllUsers()
                 applyFilters()
             } catch (e: Exception) {
@@ -140,11 +158,13 @@ class GesUserViewModel(
                 _isLoading = true
                 _errorMessage = null
 
+                // Intenta eliminar el usuario en el repositorio
                 val ok = userRepository.deleteUser(id)
                 if (!ok) {
                     _errorMessage = "No se ha podido borrar el usuario"
                 }
 
+                // Recarga la lista completa tras el borrado y vuelve a filtrar
                 _allUsers = userRepository.getAllUsers()
                 applyFilters()
             } catch (e: Exception) {
@@ -161,6 +181,7 @@ class GesUserViewModel(
         onResult: (User?) -> Unit
     ) {
         viewModelScope.launch {
+            // Consulta el usuario por id y devuelve el resultado al callback
             val user = userRepository.getUserById(id)
             onResult(user)
         }

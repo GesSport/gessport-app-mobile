@@ -12,7 +12,7 @@ class JsonUserRepository: UserRepository {
         TODO("Not yet implemented")
     }
 
-    override suspend fun getUserById(id: Int): User? {
+    override suspend fun getUserById(id: Int): User {
         TODO("Not yet implemented")
     }
 

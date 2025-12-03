@@ -9,6 +9,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 
+/**
+ * Pantalla de inicio para usuarios.
+ *
+ */
 @Composable
 fun HomeScreen(navController: NavController, name: String?) {
     Column(
@@ -18,12 +22,19 @@ fun HomeScreen(navController: NavController, name: String?) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text("Bienvenido/a, $name", style = MaterialTheme.typography.headlineSmall)
+        // Mensaje de bienvenida con el nombre recibido desde la navegación
+        Text(
+            "Bienvenido/a, $name",
+            style = MaterialTheme.typography.headlineSmall
+        )
+
         Spacer(Modifier.height(24.dp))
+
+        // Botón para cerrar sesión y volver a la pantalla de bienvenida
         Button(
             onClick = {
                 navController.navigate("welcome") {
-                    // Elimina todo el historial
+                    // Elimina todo el historial de pantallas para que no se pueda volver atrás
                     popUpTo(0)
                     launchSingleTop = true
                 }

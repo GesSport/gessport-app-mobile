@@ -1,6 +1,5 @@
 package com.example.gesport.ui.login
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -10,29 +9,38 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.gesport.R
 import com.example.gesport.domain.LoginLogic
+import com.example.gesport.ui.components.GeSportBackgroundScreen
 import com.example.gesport.ui.components.Input
 import com.example.gesport.ui.components.PasswordInput
 import com.example.gesport.ui.components.PrimaryButton
 
+/**
+ * Pantalla de registro de usuario.
+ *
+ * Muestra un formulario con validación de campos para crear una nueva cuenta
+ * (nombre, email, teléfono y contraseña).
+ *
+ * Las validaciones de negocio se delegan en la clase LoginLogic.
+ */
 @Composable
 fun RegisterScreen(navController: NavHostController) {
+    // Instancia de la lógica de validación
     val loginLogic = remember { LoginLogic() }
 
+    // Estado de los campos del formulario
     var username by rememberSaveable { mutableStateOf("") }
     var email by rememberSaveable { mutableStateOf("") }
     var phone by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
     var repeatPassword by rememberSaveable { mutableStateOf("") }
 
-    // Errores por campo
+    // Errores por campo (si son null, no se muestra error)
     var usernameError by rememberSaveable { mutableStateOf<String?>(null) }
     var emailError by rememberSaveable { mutableStateOf<String?>(null) }
     var phoneError by rememberSaveable { mutableStateOf<String?>(null) }
@@ -40,29 +48,18 @@ fun RegisterScreen(navController: NavHostController) {
     var repeatPasswordError by rememberSaveable { mutableStateOf<String?>(null) }
 
     Box(Modifier.fillMaxSize()) {
-        // Fondo
-        Image(
-            painter = painterResource(R.drawable.background),
-            contentDescription = null,
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
-        )
-
-        // Capa oscura
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = Color.Black.copy(alpha = 0.70f),
-        ) {
+        // Componente reutilizable que aplica el fondo y la capa oscura
+        GeSportBackgroundScreen {
             Column(
                 modifier = Modifier.padding(20.dp),
                 verticalArrangement = Arrangement.spacedBy(15.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Título + Texto explicativo
+                // Contenedor Título + Texto explicativo
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(90.dp) // misma altura que el login
+                        .height(90.dp)
                 ) {
                     Column(
                         modifier = Modifier.align(Alignment.BottomStart),
@@ -71,7 +68,7 @@ fun RegisterScreen(navController: NavHostController) {
 
                         Spacer(Modifier.height(20.dp))
 
-                        // Título
+                        // Título principal
                         Text(
                             text = "Registro de usuario",
                             color = Color.White,
@@ -89,9 +86,9 @@ fun RegisterScreen(navController: NavHostController) {
                     fontWeight = FontWeight.Normal
                 )
 
-
                 Spacer(Modifier.height(1.dp))
 
+                // Contenedor scrolleable(formulario)
                 Box(
                     modifier = Modifier
                         .weight(1f)
@@ -109,7 +106,7 @@ fun RegisterScreen(navController: NavHostController) {
                             value = username,
                             onValueChange = {
                                 username = it
-                                usernameError = null
+                                usernameError = null // limpia el error al modificar el campo
                             },
                             placeholder = "Nombre de usuario",
                             leadingIconRes = R.drawable.icon_user
@@ -198,7 +195,7 @@ fun RegisterScreen(navController: NavHostController) {
                 PrimaryButton(
                     text = "Enviar solicitud",
                     onClick = {
-                        // Reset errores globales
+                        // Reset errores globales antes de validar
                         usernameError = null
                         emailError = null
                         phoneError = null
@@ -207,7 +204,7 @@ fun RegisterScreen(navController: NavHostController) {
 
                         var valid = true
 
-                        // Validaciones usando LoginLogic
+                        // Validaciones LoginLogic
                         try {
                             loginLogic.validateName(username)
                         } catch (e: IllegalArgumentException) {
@@ -243,9 +240,13 @@ fun RegisterScreen(navController: NavHostController) {
                             valid = false
                         }
 
+                        // Si hay algún error, no se continúa con la navegación
                         if (!valid) {
                             return@PrimaryButton
                         }
+
+                        // Si todo es válido, se navega al login
+                        // y se elimina la pantalla de registro del backstack.
                         navController.navigate("login") {
                             popUpTo("register") { inclusive = true }
                         }
@@ -271,6 +272,8 @@ fun RegisterScreen(navController: NavHostController) {
                         Text("Inicia sesión aquí")
                     }
                 }
+
+                // Espacio inferior
                 Spacer(Modifier.height(40.dp))
             }
         }

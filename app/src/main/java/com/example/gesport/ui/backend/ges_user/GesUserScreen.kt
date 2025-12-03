@@ -1,85 +1,72 @@
 package com.example.gesport.ui.backend.ges_user
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Email
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.gesport.R
 import com.example.gesport.models.User
 import com.example.gesport.models.UserRoles
+import com.example.gesport.ui.components.GeSportBackgroundScreen
 import com.example.gesport.ui.components.Input
+import com.example.gesport.ui.components.UserCard
 
-
+/**
+ * Pantalla de gestión de usuarios (listado).
+ *
+ * Permite:
+ * - Buscar usuarios por nombre o email.
+ * - Filtrar por rol.
+ * - Mostrar estados de carga y de lista vacía.
+ * - Navegar al formulario de creación/edición.
+ * - Eliminar usuarios con confirmación.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GesUserScreen(
     navController: NavHostController,
     viewModel: GesUserViewModel
 ) {
-
+    // Estados expuestos por el ViewModel
     val users = viewModel.users
     val selectedRole = viewModel.selectedRole
     val searchQuery = viewModel.searchQuery
     val isLoading = viewModel.isLoading
     val errorMessage = viewModel.errorMessage
 
+    // Usuario pendiente de borrar (antes de mostrar el diálogo de confirmación)
     var userToDelete by remember { mutableStateOf<User?>(null) }
 
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-        // Fondo
-        Image(
-            painter = painterResource(R.drawable.background),
-            contentDescription = null,
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
-        )
-
-        // Capa oscura
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = Color.Black.copy(alpha = 0.70f),
-        ) {
+        // Fondo común reutilizable con imagen y capa oscura
+        GeSportBackgroundScreen {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(horizontal = 20.dp, vertical = 16.dp)
             ) {
 
-                // Header
+                // Titulo + subtítulo
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -117,11 +104,12 @@ fun GesUserScreen(
 
                 Spacer(Modifier.height(4.dp))
 
-                // Filtros
+                // Filtros por rol
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
+                    // Chip para mostrar todos los usuarios (sin filtro de rol)
                     FilterChip(
                         selected = selectedRole == null,
                         onClick = { viewModel.onRoleSelected(null) },
@@ -135,10 +123,12 @@ fun GesUserScreen(
                         border = null
                     )
 
+                    // Chips dinámicos para cada rol definido en UserRoles
                     UserRoles.allRoles.forEach { (roleKey, roleLabel) ->
                         FilterChip(
                             selected = selectedRole == roleKey,
                             onClick = {
+                                // Si se vuelve a pulsar el mismo rol, se deselecciona (vuelve a null)
                                 val newRole = if (selectedRole == roleKey) null else roleKey
                                 viewModel.onRoleSelected(newRole)
                             },
@@ -154,6 +144,7 @@ fun GesUserScreen(
                     }
                 }
 
+                // Mensaje de error del ViewModel (si existe)
                 if (!errorMessage.isNullOrEmpty()) {
                     Spacer(Modifier.height(6.dp))
                     Text(
@@ -170,6 +161,7 @@ fun GesUserScreen(
                 ) {
 
                     when {
+                        // Estado de carga
                         isLoading -> {
                             Column(
                                 modifier = Modifier
@@ -186,6 +178,7 @@ fun GesUserScreen(
                             }
                         }
 
+                        // Estado lista vacía
                         users.isEmpty() -> {
                             Column(
                                 modifier = Modifier
@@ -206,23 +199,26 @@ fun GesUserScreen(
                             }
                         }
 
+                        // Lista con usuarios
                         else -> {
                             LazyColumn(
                                 verticalArrangement = Arrangement.spacedBy(12.dp),
                                 modifier = Modifier
                                     .fillMaxSize()
-                                    .offset(y = (-80).dp)
+                                    .offset(y = (-80).dp) // desplaza la lista hacia arriba para compensar el diseño
                             ) {
                                 items(
                                     items = users,
                                     key = { user -> user.id }
                                 ) { user ->
-                                    UserItemCard(
+                                    UserCard(
                                         user = user,
                                         onEdit = {
+                                            // Navega al formulario en modo edición con el id del usuario
                                             navController.navigate("formuser/${user.id}")
                                         },
                                         onDelete = {
+                                            // Abre el diálogo de confirmación de borrado para este usuario
                                             userToDelete = user
                                         }
                                     )
@@ -242,7 +238,7 @@ fun GesUserScreen(
             contentColor = Color.White,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(end = 20.dp, bottom = 70.dp)  // ← aquí lo levantamos
+                .padding(end = 20.dp, bottom = 70.dp)  // ← lo levantamos para que no quede pegado al borde inferior
         ) {
             Icon(
                 imageVector = Icons.Default.Add,
@@ -250,6 +246,7 @@ fun GesUserScreen(
             )
         }
 
+        // Diálogo de confirmación de borrado
         userToDelete?.let { user ->
             AlertDialog(
                 onDismissRequest = { userToDelete = null },
@@ -265,6 +262,7 @@ fun GesUserScreen(
                 confirmButton = {
                     TextButton(
                         onClick = {
+                            // Llama al ViewModel para borrar el usuario y cierra el diálogo
                             viewModel.deleteUser(user.id)
                             userToDelete = null
                         }
@@ -286,110 +284,3 @@ fun GesUserScreen(
         }
     }
 }
-
-@Composable
-private fun UserItemCard(
-    user: User,
-    onEdit: () -> Unit,
-    onDelete: () -> Unit
-) {
-    // Color dinámico según el rol
-    val tagColor = Color(
-        UserRoles.roleColors[user.rol] ?: 0xFF2DAAE1L
-    )
-
-    Card(
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White.copy(alpha = 0.20f)
-        ),
-        shape = RoundedCornerShape(15.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onEdit() }
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-
-
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(2.dp)
-                ) {
-                    Text(
-                        text = user.name,
-                        color = Color.White,
-                        fontWeight = FontWeight.SemiBold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Email,
-                            contentDescription = null,
-                            tint = Color.White.copy(alpha = 0.6f),
-                            modifier = Modifier.size(14.dp)
-                        )
-                        Spacer(Modifier.width(4.dp))
-                        Text(
-                            text = user.email,
-                            color = Color.White.copy(alpha = 0.7f),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-
-                    // Chip de rol
-                    Box(
-                        modifier = Modifier
-                            .padding(top = 2.dp)
-                            .clip(RoundedCornerShape(18))
-                            .background(tagColor.copy(alpha = 0.75f))
-                            .padding(horizontal = 8.dp, vertical = 2.dp)
-                    ) {
-                        Text(
-                            text = user.rol.uppercase(),
-                            color = Color.White,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
-                }
-            }
-
-            // Botones Editar / Borrar
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Edit,
-                    contentDescription = "Editar",
-                    tint = Color(0xFF468CB3),
-                    modifier = Modifier
-                        .size(22.dp)
-                        .clickable { onEdit() }
-                )
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = "Borrar",
-                    tint = Color(0xFFFF6B6B),
-                    modifier = Modifier
-                        .size(22.dp)
-                        .clickable { onDelete() }
-                )
-            }
-        }
-    }
-}
-
