@@ -1,22 +1,23 @@
 package com.example.gesport.domain
 
-import com.example.gesport.data.LoginRepository
+import com.example.gesport.data.DataUserRepository
 import com.example.gesport.models.User
+import com.example.gesport.repository.UserRepository
 
 class LoginLogic(
+    private val userRepository: UserRepository = DataUserRepository
 ) {
     /* Dejamos aquí la lógica */
 
-    fun checkLogin(email: String, password: String): User {
+    suspend fun checkLogin(email: String, password: String): User {
         if (email.isBlank() || password.isBlank()) {
             throw IllegalArgumentException("Los campos no pueden estar vacíos.")
         }
 
-        val user = LoginRepository.getUsers()
+        val users = userRepository.getAllUsers()
             // Se puede hacer con un foreach o con lamda
             // it = iterador (valor con el que se está trabajando)
-
-            .find { it.email == email && it.password == password }
+        val user = users.find { it.email == email && it.password == password }
             ?: throw IllegalArgumentException("Email o contraseña incorrectos.")
 
         return user

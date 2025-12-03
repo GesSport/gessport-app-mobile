@@ -1,9 +1,7 @@
 package com.example.gesport.ui.backend.ges_user
 
-import android.util.Patterns
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -14,12 +12,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.gesport.R
-import com.example.gesport.data.DataUserRepository
+import com.example.gesport.domain.LoginLogic
 import com.example.gesport.models.User
 import com.example.gesport.models.UserRoles
 import com.example.gesport.ui.components.Input
@@ -30,42 +25,37 @@ import com.example.gesport.ui.components.PrimaryButton
 @Composable
 fun AddUserScreen(
     navController: NavHostController,
+    viewModel: GesUserViewModel,
     userId: Int? = null
 ) {
-    // ViewModel
-    val viewModel: GesUserViewModel = viewModel(
-        factory = object : ViewModelProvider.Factory {
-            @Suppress("UNCHECKED_CAST")
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                val repo = DataUserRepository
-                return GesUserViewModel(repo) as T
-            }
-        }
-    )
+
+    val loginLogic = remember { LoginLogic() }
 
     val isEditMode = userId != null
 
-    var nombre by remember { mutableStateOf("") }
+    var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var repeatPassword by remember { mutableStateOf("") }
     var rol by remember { mutableStateOf("JUGADOR") } // por defecto
 
-    var nombreError by remember { mutableStateOf<String?>(null) }
+    var nameError by remember { mutableStateOf<String?>(null) }
     var emailError by remember { mutableStateOf<String?>(null) }
     var passwordError by remember { mutableStateOf<String?>(null) }
+    var repeatPasswordError by remember { mutableStateOf<String?>(null) }
     var formError by remember { mutableStateOf<String?>(null) }
 
     val vmError = viewModel.errorMessage
-    val isLoading = viewModel.isLoading
 
     // Cargar datos si estamos editando
     LaunchedEffect(userId) {
         if (userId != null) {
             viewModel.loadUserById(userId) { user ->
                 if (user != null) {
-                    nombre = user.name
+                    name = user.name
                     email = user.email
                     password = user.password
+                    repeatPassword = user.password
                     rol = user.rol
                 } else {
                     formError = "No se ha encontrado el usuario"
@@ -77,7 +67,7 @@ fun AddUserScreen(
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-        // Fondo con imagen (mismo patrón que login y gestión de usuarios)
+        // Fondo
         Image(
             painter = painterResource(R.drawable.background),
             contentDescription = null,
@@ -94,26 +84,15 @@ fun AddUserScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(horizontal = 20.dp, vertical = 16.dp),
-                verticalArrangement = Arrangement.SpaceBetween
+                verticalArrangement = Arrangement.Top
             ) {
-
-                // 🔹 HEADER + FORM
                 Column {
-
                     // Header con título y subtítulo, y botón atrás arriba
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(120.dp)
                     ) {
-                        // Botón atrás
-                        TextButton(
-                            onClick = { navController.popBackStack() },
-                            modifier = Modifier.align(Alignment.TopStart)
-                        ) {
-                            Text("< Atrás", color = Color(0xFF2DAAE1))
-                        }
-
                         // Título + subtítulo
                         Column(
                             modifier = Modifier.align(Alignment.BottomStart),
@@ -140,20 +119,20 @@ fun AddUserScreen(
 
                     Spacer(Modifier.height(20.dp))
 
-                    // NOMBRE
+                    // Input Nombre
                     Input(
-                        value = nombre,
+                        value = name,
                         onValueChange = {
-                            nombre = it
-                            nombreError = null
+                            name = it
+                            nameError = null
                             formError = null
                         },
                         placeholder = "Nombre completo",
                         leadingIconRes = R.drawable.icon_user
                     )
-                    if (nombreError != null) {
+                    if (nameError != null) {
                         Text(
-                            text = nombreError ?: "",
+                            text = nameError ?: "",
                             color = Color(0xFFFF6B6B),
                             modifier = Modifier.padding(top = 4.dp, bottom = 4.dp)
                         )
@@ -161,7 +140,7 @@ fun AddUserScreen(
 
                     Spacer(Modifier.height(8.dp))
 
-                    // EMAIL
+                    // Input Email
                     Input(
                         value = email,
                         onValueChange = {
@@ -182,7 +161,7 @@ fun AddUserScreen(
 
                     Spacer(Modifier.height(8.dp))
 
-                    // PASSWORD
+                    // Input Password
                     PasswordInput(
                         value = password,
                         onValueChange = {
@@ -200,9 +179,29 @@ fun AddUserScreen(
                         )
                     }
 
+                    Spacer(Modifier.height(8.dp))
+
+                    // Input Repetir contraseña
+                    PasswordInput(
+                        value = repeatPassword,
+                        onValueChange = {
+                            repeatPassword = it
+                            repeatPasswordError = null
+                            formError = null
+                        },
+                        placeholder = "Repetir contraseña"
+                    )
+                    if (repeatPasswordError != null) {
+                        Text(
+                            text = repeatPasswordError ?: "",
+                            color = Color(0xFFFF6B6B),
+                            modifier = Modifier.padding(top = 4.dp, bottom = 4.dp)
+                        )
+                    }
+
                     Spacer(Modifier.height(12.dp))
 
-                    // ROL
+                    // Chips Rol
                     Text(
                         text = "Rol de usuario",
                         color = Color.White,
@@ -211,7 +210,7 @@ fun AddUserScreen(
                     )
 
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
                         modifier = Modifier.padding(bottom = 8.dp)
                     ) {
                         UserRoles.allRoles.forEach { (roleKey, roleLabel) ->
@@ -247,36 +246,55 @@ fun AddUserScreen(
                     }
                 }
 
-                // 🔹 BOTÓN GUARDAR ABAJO (mismo estilo que en login)
+                Spacer(Modifier.height(200.dp))
+
+
+                // Botón Guardar
                 PrimaryButton(
                     text = if (isEditMode) "Guardar cambios" else "Crear usuario",
                     onClick = {
                         // Reset de errores
-                        nombreError = null
+                        nameError = null
                         emailError = null
                         passwordError = null
+                        repeatPasswordError = null
                         formError = null
 
-                        var isValid = true
+                        // Validaciones usando LoginLogic
+                        try {
+                            loginLogic.validateName(name)
+                        } catch (e: IllegalArgumentException) {
+                            nameError = e.message
+                        }
 
-                        if (nombre.isBlank()) {
-                            nombreError = "Introduce un nombre"
-                            isValid = false
+                        try {
+                            loginLogic.validateEmail(email)
+                        } catch (e: IllegalArgumentException) {
+                            emailError = e.message
                         }
-                        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-                            emailError = "Introduce un email válido"
-                            isValid = false
+
+                        try {
+                            loginLogic.validatePassword(password)
+                        } catch (e: IllegalArgumentException) {
+                            passwordError = e.message
                         }
-                        if (password.length < 4) {
-                            passwordError = "La contraseña debe tener al menos 4 caracteres"
-                            isValid = false
+
+                        try {
+                            loginLogic.validateRepeat(password, repeatPassword)
+                        } catch (e: IllegalArgumentException) {
+                            repeatPasswordError = e.message
                         }
+
+                        val isValid = nameError == null &&
+                                emailError == null &&
+                                passwordError == null &&
+                                repeatPasswordError == null
 
                         if (!isValid) return@PrimaryButton
 
                         val user = User(
                             id = userId ?: 0,
-                            name = nombre.trim(),
+                            name = name.trim(),
                             email = email.trim(),
                             password = password,
                             rol = rol
@@ -294,7 +312,5 @@ fun AddUserScreen(
                 )
             }
         }
-
-        // Si quisieras, aquí podrías mostrar un overlay de loading con isLoading
     }
 }

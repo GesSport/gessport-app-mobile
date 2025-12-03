@@ -1,9 +1,7 @@
 package com.example.gesport.ui.login
 
-import android.R.attr.fontWeight
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -13,7 +11,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
@@ -23,10 +20,12 @@ import com.example.gesport.ui.components.GoogleButton
 import com.example.gesport.ui.components.Input
 import com.example.gesport.ui.components.PasswordInput
 import com.example.gesport.ui.components.PrimaryButton
+import kotlinx.coroutines.launch
 
 @Composable
 fun LoginScreen(navController: NavHostController) {
     val logic = remember { LoginLogic() }
+    val scope = rememberCoroutineScope()
 
     var email by remember { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
@@ -53,7 +52,7 @@ fun LoginScreen(navController: NavHostController) {
                 verticalArrangement = Arrangement.Top
             ) {
 
-                // 🔹 TITULO + LOGO + SUBTÍTULO (ANTES DENTRO DEL HEADER)
+                // Título + Logo + Subtítulo
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -112,7 +111,7 @@ fun LoginScreen(navController: NavHostController) {
 
                 Spacer(Modifier.height(1.dp))
 
-                // 🔹 CONTENIDO DEL FORMULARIO (CON PADDING LATERAL)
+                // Contenido principal
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -196,6 +195,7 @@ fun LoginScreen(navController: NavHostController) {
                         text = "Iniciar sesión",
                         onClick = {
                             errorMessage = ""
+                            scope.launch {
                             try {
                                 val user = logic.checkLogin(
                                     email.trim(),
@@ -208,6 +208,8 @@ fun LoginScreen(navController: NavHostController) {
                                 }
                             } catch (e: IllegalArgumentException) {
                                 errorMessage = e.message.toString()
+                            } catch (_: Exception) {
+                            errorMessage = "Ha ocurrido un error"}
                             }
                         }
                     )

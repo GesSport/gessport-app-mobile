@@ -49,7 +49,7 @@ class GesUserViewModel(
                 _allUsers = userRepository.getAllUsers()
                 applyFilters()
             } catch (e: Exception) {
-                _errorMessage = "Error al cargar los usuarios"
+                _errorMessage = e.message ?: "Error al cargar los usuarios"
                 _allUsers = emptyList()
                 _users = emptyList()
             } finally {
@@ -104,7 +104,7 @@ class GesUserViewModel(
                 _allUsers = userRepository.getAllUsers()
                 applyFilters()
             } catch (e: Exception) {
-                _errorMessage = "No se ha podido crear el usuario"
+                _errorMessage = e.message ?: "No se ha podido crear el usuario"
             } finally {
                 _isLoading = false
             }
@@ -126,7 +126,7 @@ class GesUserViewModel(
                 _allUsers = userRepository.getAllUsers()
                 applyFilters()
             } catch (e: Exception) {
-                _errorMessage = "No se ha podido actualizar el usuario"
+                _errorMessage = e.message ?: "No se ha podido actualizar el usuario"
             } finally {
                 _isLoading = false
             }
@@ -148,7 +148,7 @@ class GesUserViewModel(
                 _allUsers = userRepository.getAllUsers()
                 applyFilters()
             } catch (e: Exception) {
-                _errorMessage = "No se ha podido borrar el usuario"
+                _errorMessage = e.message ?:"No se ha podido borrar el usuario"
             } finally {
                 _isLoading = false
             }

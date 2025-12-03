@@ -1,14 +1,11 @@
 package com.example.gesport.ui.backend.ges_user
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -31,7 +28,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -39,31 +35,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.gesport.R
-import com.example.gesport.data.DataUserRepository
 import com.example.gesport.models.User
 import com.example.gesport.models.UserRoles
 import com.example.gesport.ui.components.Input
 
-@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GesUserScreen(
-    navController: NavHostController
+    navController: NavHostController,
+    viewModel: GesUserViewModel
 ) {
-    val viewModel: GesUserViewModel = viewModel(
-        factory = object : ViewModelProvider.Factory {
-            @Suppress("UNCHECKED_CAST")
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                val repo = DataUserRepository
-                return GesUserViewModel(repo) as T
-            }
-        }
-    )
 
     val users = viewModel.users
     val selectedRole = viewModel.selectedRole
@@ -123,7 +107,7 @@ fun GesUserScreen(
 
                 Spacer(Modifier.height(20.dp))
 
-                // Search
+                // Input Buscar
                 Input(
                     value = searchQuery,
                     onValueChange = { viewModel.onSearchQueryChange(it) },
@@ -131,7 +115,6 @@ fun GesUserScreen(
                     leadingIconRes = R.drawable.icon_user
                 )
 
-                // Antes chips: menos espacio
                 Spacer(Modifier.height(4.dp))
 
                 // Filtros
@@ -179,7 +162,6 @@ fun GesUserScreen(
                     )
                 }
 
-                // 🔹 Sin Spacer grande aquí: la lista sube más
                 // Contenido principal
                 Box(
                     modifier = Modifier
@@ -227,9 +209,14 @@ fun GesUserScreen(
                         else -> {
                             LazyColumn(
                                 verticalArrangement = Arrangement.spacedBy(12.dp),
-                                modifier = Modifier.fillMaxSize().offset(y = (-80).dp),
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .offset(y = (-80).dp)
                             ) {
-                                items(users) { user ->
+                                items(
+                                    items = users,
+                                    key = { user -> user.id }
+                                ) { user ->
                                     UserItemCard(
                                         user = user,
                                         onEdit = {
@@ -241,13 +228,14 @@ fun GesUserScreen(
                                     )
                                 }
                             }
+
                         }
                     }
                 }
             }
         }
 
-        // FAB por encima de la bottom bar
+        // Botón ( + ) añadir
         FloatingActionButton(
             onClick = { navController.navigate("formuser") },
             containerColor = Color(0xFF2DAAE1).copy(alpha = 0.40f),
@@ -312,17 +300,12 @@ private fun UserItemCard(
 
     Card(
         colors = CardDefaults.cardColors(
-            containerColor = Color.Black.copy(alpha = 0.0f)
+            containerColor = Color.White.copy(alpha = 0.20f)
         ),
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(15.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .border(
-                width = 1.dp,                      // grosor del borde
-                color = Color.White.copy(alpha = 0.55f),  // color del borde
-                shape = RoundedCornerShape(18.dp)
-            )
-            .clickable { onEdit() } // al tocar la card también editamos
+            .clickable { onEdit() }
     ) {
         Row(
             modifier = Modifier
@@ -367,11 +350,11 @@ private fun UserItemCard(
                         )
                     }
 
-                    // Chip de rol — ahora con el color del rol
+                    // Chip de rol
                     Box(
                         modifier = Modifier
                             .padding(top = 2.dp)
-                            .clip(RoundedCornerShape(50))
+                            .clip(RoundedCornerShape(18))
                             .background(tagColor.copy(alpha = 0.75f))
                             .padding(horizontal = 8.dp, vertical = 2.dp)
                     ) {
@@ -384,7 +367,7 @@ private fun UserItemCard(
                 }
             }
 
-            // Acciones editar / borrar
+            // Botones Editar / Borrar
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically

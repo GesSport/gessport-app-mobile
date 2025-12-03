@@ -1,3 +1,7 @@
+// En desuso :( , ahora usamos DataUserRepository </3
+
+/*
+
 package com.example.gesport.data
 
 import com.example.gesport.models.User
@@ -23,3 +27,5 @@ object LoginRepository {
     fun getUsers(): List<User> = users
 
 }
+
+ */

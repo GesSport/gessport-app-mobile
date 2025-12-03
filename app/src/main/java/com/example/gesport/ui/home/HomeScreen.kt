@@ -20,10 +20,18 @@ fun HomeScreen(navController: NavController, name: String?) {
     ) {
         Text("Bienvenido/a, $name", style = MaterialTheme.typography.headlineSmall)
         Spacer(Modifier.height(24.dp))
-        Button(onClick = { navController.popBackStack() },
+        Button(
+            onClick = {
+                navController.navigate("welcome") {
+                    // Elimina todo el historial
+                    popUpTo(0)
+                    launchSingleTop = true
+                }
+            },
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF2DAAE1),
-                contentColor = Color.White)
+                containerColor = Color(0xFF257DA4),
+                contentColor = Color.White
+            )
         ) {
             Text("Cerrar sesión")
         }

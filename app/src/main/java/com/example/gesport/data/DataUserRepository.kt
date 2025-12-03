@@ -3,7 +3,7 @@ package com.example.gesport.data
 import com.example.gesport.models.User
 import com.example.gesport.repository.UserRepository
 
-// SINGLETON: toda la app comparte la misma lista de usuarios
+// Singleton
 object DataUserRepository : UserRepository {
 
     private val users = mutableListOf(
@@ -70,11 +70,13 @@ object DataUserRepository : UserRepository {
     }
 
     override suspend fun deleteUser(id: Int): Boolean {
-        return users.removeIf { it.id == id }
+        val user = users.find { it.id == id } ?: return false
+        users.remove(user)
+        return true
     }
 
     override suspend fun getAllUsers(): List<User> {
-        return users
+        return users.toList()
     }
 
     override suspend fun getUsersByRole(rol: String): List<User> =

@@ -13,7 +13,7 @@ object UserRoles {
         ARBITRO to "Árbitro"
     )
 
-    // colores en formato Long (ARGB)
+    // Colores por rol
     val roleColors = mapOf(
         ADMIN_DEPORTIVO to 0xFF4DA8DAL,
         ENTRENADOR      to 0xFF6ECB63L,

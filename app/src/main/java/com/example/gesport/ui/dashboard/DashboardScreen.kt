@@ -51,7 +51,7 @@ fun DashboardScreen(
                 horizontalAlignment = Alignment.Start
             ) {
 
-                // HEADER: título + subtítulo (solo esto)
+                // Título + subtítulo
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -79,9 +79,9 @@ fun DashboardScreen(
                     }
                 }
 
-                // Bajamos el saludo
                 Spacer(Modifier.height(16.dp))
 
+                // Saludo
                 Text(
                     text = "Hola, ${username ?: "Administrador"} 👋",
                     color = Color.White,
@@ -89,7 +89,7 @@ fun DashboardScreen(
                     fontWeight = FontWeight.Medium
                 )
 
-                // GRID DE BOTONES (2x2)
+                // Grid de botones (2x2)
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -103,7 +103,7 @@ fun DashboardScreen(
                             icon = Icons.Default.Person,
                             modifier = Modifier.weight(1f)
                         ) {
-                            // 👉 Navega al panel de usuarios que ya tienes
+                            // Navega al panel de usuarios
                             navController.navigate("gesuser")
                         }
 
@@ -113,7 +113,7 @@ fun DashboardScreen(
                             modifier = Modifier.weight(1f)
                         ) {
                             // TODO: Navegar a gestión de equipos
-                            // navController.navigate("teams")
+                            // navController.navigate("")
                         }
                     }
 
@@ -127,7 +127,7 @@ fun DashboardScreen(
                             modifier = Modifier.weight(1f)
                         ) {
                             // TODO: Navegar a gestión de pistas
-                            // navController.navigate("courts")
+                            // navController.navigate("")
                         }
 
                         AdminTile(
@@ -136,7 +136,7 @@ fun DashboardScreen(
                             modifier = Modifier.weight(1f)
                         ) {
                             // TODO: Navegar a gestión de reservas
-                            // navController.navigate("bookings")
+                            // navController.navigate("")
                         }
                     }
                 }
@@ -154,10 +154,10 @@ private fun AdminTile(
 ) {
     Surface(
         modifier = modifier
-            .aspectRatio(1f) // cuadrado
+            .aspectRatio(1f)
             .clickable { onClick() },
         shape = RoundedCornerShape(4.dp),
-        color = Color(0xFF2DAAE1).copy(alpha = 0.40f) // mismo azul que el botón, con ligera transparencia
+        color = Color(0xFF2DAAE1).copy(alpha = 0.40f)
     ) {
         Column(
             modifier = Modifier

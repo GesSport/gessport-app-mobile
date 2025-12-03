@@ -2,7 +2,6 @@ package com.example.gesport.ui.login
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -34,7 +33,7 @@ fun RecoverPassScreen(navController: NavController) {
             contentScale = ContentScale.Crop
         )
 
-        // Card
+        // Capa oscura
         Surface(
             modifier = Modifier.fillMaxSize(),
             color = Color.Black.copy(alpha = 0.70f),
@@ -44,7 +43,7 @@ fun RecoverPassScreen(navController: NavController) {
                 verticalArrangement = Arrangement.spacedBy(15.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // 🔹 TITULO + LOGO + SUBTÍTULO (ANTES DENTRO DEL HEADER)
+                // Título + Texto explicativo
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -55,11 +54,9 @@ fun RecoverPassScreen(navController: NavController) {
                         horizontalAlignment = Alignment.Start
                     ) {
 
-
-
                         Spacer(Modifier.height(20.dp))
 
-                        // TÍTULO DEBAJO DEL NOMBRE
+                        // Título
                         Text(
                             text = "Recuperar contraseña",
                             color = Color.White,
