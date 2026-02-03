@@ -9,16 +9,22 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.gesport.R
+import com.example.gesport.data.RoomUserRepository
+import com.example.gesport.database.AppDatabase
 import com.example.gesport.domain.LoginLogic
+import com.example.gesport.models.User
+import com.example.gesport.models.UserRoles
 import com.example.gesport.ui.components.GeSportBackgroundScreen
 import com.example.gesport.ui.components.Input
 import com.example.gesport.ui.components.PasswordInput
 import com.example.gesport.ui.components.PrimaryButton
+import kotlinx.coroutines.launch
 
 /**
  * Pantalla de registro de usuario.
@@ -33,6 +39,14 @@ fun RegisterScreen(navController: NavHostController) {
     // Instancia de la lógica de validación
     val loginLogic = remember { LoginLogic() }
 
+    // Scope para lanzar corrutinas desde la UI
+    val scope = rememberCoroutineScope()
+
+    // ROOM (repo para guardar)
+    val context = LocalContext.current
+    val db = remember { AppDatabase.getDatabase(context.applicationContext) }
+    val repo = remember { RoomUserRepository(db.userDao()) }
+
     // Estado de los campos del formulario
     var username by rememberSaveable { mutableStateOf("") }
     var email by rememberSaveable { mutableStateOf("") }
@@ -46,6 +60,9 @@ fun RegisterScreen(navController: NavHostController) {
     var phoneError by rememberSaveable { mutableStateOf<String?>(null) }
     var passwordError by rememberSaveable { mutableStateOf<String?>(null) }
     var repeatPasswordError by rememberSaveable { mutableStateOf<String?>(null) }
+
+    // Error general (ej: email ya existe / fallo al guardar)
+    var formError by rememberSaveable { mutableStateOf<String?>(null) }
 
     Box(Modifier.fillMaxSize()) {
         // Componente reutilizable que aplica el fondo y la capa oscura
@@ -107,6 +124,7 @@ fun RegisterScreen(navController: NavHostController) {
                             onValueChange = {
                                 username = it
                                 usernameError = null // limpia el error al modificar el campo
+                                formError = null
                             },
                             placeholder = "Nombre de usuario",
                             leadingIconRes = R.drawable.icon_user
@@ -125,6 +143,7 @@ fun RegisterScreen(navController: NavHostController) {
                             onValueChange = {
                                 email = it
                                 emailError = null
+                                formError = null
                             },
                             placeholder = "Correo electrónico",
                             leadingIconRes = R.drawable.icon_email
@@ -143,6 +162,7 @@ fun RegisterScreen(navController: NavHostController) {
                             onValueChange = {
                                 phone = it
                                 phoneError = null
+                                formError = null
                             },
                             placeholder = "Teléfono",
                             leadingIconRes = R.drawable.icon_phone
@@ -161,6 +181,7 @@ fun RegisterScreen(navController: NavHostController) {
                             onValueChange = {
                                 password = it
                                 passwordError = null
+                                formError = null
                             },
                             placeholder = "Contraseña"
                         )
@@ -178,6 +199,7 @@ fun RegisterScreen(navController: NavHostController) {
                             onValueChange = {
                                 repeatPassword = it
                                 repeatPasswordError = null
+                                formError = null
                             },
                             placeholder = "Repetir contraseña"
                         )
@@ -186,6 +208,15 @@ fun RegisterScreen(navController: NavHostController) {
                                 text = it,
                                 color = Color(0xFFFF6B6B),
                                 modifier = Modifier.padding(top = 2.dp)
+                            )
+                        }
+
+                        // Error general
+                        formError?.let {
+                            Text(
+                                text = it,
+                                color = Color(0xFFFF6B6B),
+                                modifier = Modifier.padding(top = 4.dp)
                             )
                         }
                     }
@@ -201,6 +232,7 @@ fun RegisterScreen(navController: NavHostController) {
                         phoneError = null
                         passwordError = null
                         repeatPasswordError = null
+                        formError = null
 
                         var valid = true
 
@@ -245,10 +277,37 @@ fun RegisterScreen(navController: NavHostController) {
                             return@PrimaryButton
                         }
 
-                        // Si todo es válido, se navega al login
-                        // y se elimina la pantalla de registro del backstack.
-                        navController.navigate("login") {
-                            popUpTo("register") { inclusive = true }
+                        // Si todo es válido, se crea el usuario en Room
+                        scope.launch {
+                            try {
+                                val mail = email.trim()
+
+                                // Evitar duplicados por email (recomendado)
+                                val existing = repo.getUserByEmail(mail)
+                                if (existing != null) {
+                                    formError = "Ese correo ya está registrado."
+                                    return@launch
+                                }
+
+                                val user = User(
+                                    // id se autogenera en Room
+                                    nombre = username.trim(),
+                                    email = mail,
+                                    password = password,
+                                    // por defecto
+                                    rol = UserRoles.ADMIN_DEPORTIVO
+                                )
+
+                                repo.addUser(user)
+
+                                // Si todo es válido, se navega al login
+                                // y se elimina la pantalla de registro del backstack.
+                                navController.navigate("login") {
+                                    popUpTo("register") { inclusive = true }
+                                }
+                            } catch (_: Exception) {
+                                formError = "No se ha podido registrar el usuario."
+                            }
                         }
                     }
                 )

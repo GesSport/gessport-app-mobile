@@ -1,24 +1,36 @@
 package com.example.gesport.domain
 
-import com.example.gesport.data.DataUserRepository
 import com.example.gesport.models.User
 import com.example.gesport.repository.UserRepository
 
 class LoginLogic(
-    private val userRepository: UserRepository = DataUserRepository
+    // Para poder usar LoginLogic() en pantallas que solo validan (AddUserScreen)
+    private val userRepository: UserRepository? = null
 ) {
     /* Dejamos aquí la lógica */
 
+    // - Validamos campos vacíos
+    // - Buscamos usuario por email en Room (repo.getUserByEmail)
+    // - Comprobamos contraseña
     suspend fun checkLogin(email: String, password: String): User {
-        if (email.isBlank() || password.isBlank()) {
+        val mail = email.trim()
+
+        if (mail.isBlank() || password.isBlank()) {
             throw IllegalArgumentException("Los campos no pueden estar vacíos.")
         }
 
-        val users = userRepository.getAllUsers()
-            // Se puede hacer con un foreach o con lamda
-            // it = iterador (valor con el que se está trabajando)
-        val user = users.find { it.email == email && it.password == password }
+        // CheckLogin necesita repo (LoginScreen se lo pasa al crear LoginLogic(repo))
+        val repo = userRepository
+            ?: throw IllegalStateException("LoginLogic necesita un UserRepository para autenticar (checkLogin).")
+
+        // Buscar por email
+        val user = repo.getUserByEmail(mail)
             ?: throw IllegalArgumentException("Email o contraseña incorrectos.")
+
+        // Comprobar contraseña
+        if (user.password != password) {
+            throw IllegalArgumentException("Email o contraseña incorrectos.")
+        }
 
         return user
     }
@@ -26,7 +38,6 @@ class LoginLogic(
     private val nameRegex = Regex("^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ ]{4,}$")
     private val emailRegex = Regex("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")
     private val passRegex = Regex("^(?=.*[a-z])(?=.*[A-Z]).{6,}$")
-
 
     fun validateName(name: String) {
         val v = name.trim()
@@ -67,5 +78,4 @@ class LoginLogic(
         if (repeatPassword.isEmpty()) throw IllegalArgumentException("Repite la contraseña.")
         if (password != repeatPassword) throw IllegalArgumentException("Las contraseñas no coinciden.")
     }
-
 }

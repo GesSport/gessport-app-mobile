@@ -1,5 +1,7 @@
 package com.example.gesport.data
 
+/*
+
 import com.example.gesport.models.User
 import com.example.gesport.repository.UserRepository
 
@@ -24,14 +26,14 @@ object DataUserRepository : UserRepository {
         User(
             id = 3,
             name = "Pepa Ferrández",
-            email = "laura.jugadora@club.es",
+            email = "pepa.jugadora@club.es",
             password = "1234",
             rol = "JUGADOR"
         ),
         User(
             id = 4,
             name = "Pablo Teruel",
-            email = "luis.arbitro@club.es",
+            email = "pablo.arbitro@club.es",
             password = "1234",
             rol = "ARBITRO"
         ),
@@ -82,3 +84,5 @@ object DataUserRepository : UserRepository {
     override suspend fun getUsersByRole(rol: String): List<User> =
         users.filter { it.rol == rol }
 }
+
+ */

@@ -61,7 +61,7 @@ fun UserCard(
                     verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
                     Text(
-                        text = user.name,
+                        text = user.nombre,
                         color = Color.White,
                         fontWeight = FontWeight.SemiBold,
                         maxLines = 1,

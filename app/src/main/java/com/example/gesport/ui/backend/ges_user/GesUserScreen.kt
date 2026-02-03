@@ -238,7 +238,7 @@ fun GesUserScreen(
             contentColor = Color.White,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(end = 20.dp, bottom = 70.dp)  // ← lo levantamos para que no quede pegado al borde inferior
+                .padding(end = 20.dp, bottom = 70.dp)  // Para que no quede pegado al borde inferior
         ) {
             Icon(
                 imageVector = Icons.Default.Add,
@@ -257,7 +257,7 @@ fun GesUserScreen(
                     )
                 },
                 text = {
-                    Text("¿Seguro que quieres eliminar a ${user.name}?")
+                    Text("¿Seguro que quieres eliminar a ${user.nombre}?")
                 },
                 confirmButton = {
                     TextButton(

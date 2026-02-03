@@ -8,13 +8,17 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.gesport.R
+import com.example.gesport.data.RoomUserRepository
+import com.example.gesport.database.AppDatabase
 import com.example.gesport.domain.LoginLogic
+import com.example.gesport.models.UserRoles
 import com.example.gesport.ui.components.GeSportBackgroundScreen
 import com.example.gesport.ui.components.GoogleButton
 import com.example.gesport.ui.components.Input
@@ -29,15 +33,22 @@ import kotlinx.coroutines.launch
  * - Entrada de email y contraseña.
  * - Recuerdo de sesión (checkbox).
  * - Navegación a recuperación de contraseña, registro y dashboard/home según el rol.
- * - Uso de LoginLogic para validar credenciales contra el repositorio de usuarios.
+ * - Autenticación contra Room (UserDao).
  */
 @Composable
 fun LoginScreen(navController: NavHostController) {
-    // Instancia de la lógica de validación
-    val logic = remember { LoginLogic() }
 
-    // Scope para lanzar corrutinas desde la UI (checkLogin es suspend).
+    // Scope para lanzar corrutinas desde la UI
     val scope = rememberCoroutineScope()
+
+    //  ROOM
+    val context = LocalContext.current
+    val db = remember { AppDatabase.getDatabase(context.applicationContext) }
+    val userDao = remember { db.userDao() }
+
+    // Repo + Logic (login autenticando contra Room a través del repositorio)
+    val roomRepo = remember { RoomUserRepository(userDao) }
+    val logic = remember { LoginLogic(roomRepo) }
 
     // Estado de los campos del formulario
     var email by remember { mutableStateOf("") }
@@ -131,7 +142,6 @@ fun LoginScreen(navController: NavHostController) {
                     value = email,
                     onValueChange = {
                         email = it
-                        // Si había error, se limpia al modificar el campo
                         if (errorMessage.isNotEmpty()) errorMessage = ""
                     },
                     placeholder = "Correo electrónico",
@@ -145,7 +155,6 @@ fun LoginScreen(navController: NavHostController) {
                     value = password,
                     onValueChange = {
                         password = it
-                        // Limpia el error al escribir de nuevo
                         if (errorMessage.isNotEmpty()) errorMessage = ""
                     },
                     placeholder = "Contraseña"
@@ -161,7 +170,6 @@ fun LoginScreen(navController: NavHostController) {
 
                 // Checkbox "Recuérdame" + botón "¿Olvidaste…? Pulsa aquí"
                 Column(modifier = Modifier.fillMaxWidth()) {
-                    // Recuérdame
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Checkbox(
                             checked = rememberMe,
@@ -178,7 +186,6 @@ fun LoginScreen(navController: NavHostController) {
 
                     Spacer(Modifier.height(5.dp))
 
-                    // botón "¿Olvidaste…? Pulsa aquí
                     Row(
                         modifier = Modifier.padding(top = 2.dp),
                         verticalAlignment = Alignment.CenterVertically
@@ -208,24 +215,28 @@ fun LoginScreen(navController: NavHostController) {
                         errorMessage = ""
                         scope.launch {
                             try {
-                                // Validación del login mediante LoginLogic.
-                                // Si las credenciales son correctas, devuelve el usuario.
+                                // Autenticación usando LoginLogic (que a su vez usa RoomUserRepository)
                                 val user = logic.checkLogin(
-                                    email.trim(),
-                                    password
+                                    email = email.trim(),
+                                    password = password
                                 )
 
-                                // Navegación según el rol del usuario autenticado
-                                if (user.rol == "ADMIN_DEPORTIVO") {
-                                    navController.navigate("dashboard/${user.name}")
+                                // Navegación según rol
+                                if (user.rol == UserRoles.ADMIN_DEPORTIVO) {
+                                    navController.navigate("dashboard/${user.nombre}") {
+                                        popUpTo("login") { inclusive = true }
+                                        launchSingleTop = true
+                                    }
                                 } else {
-                                    navController.navigate("home/${user.name}")
+                                    navController.navigate("home/${user.nombre}") {
+                                        popUpTo("login") { inclusive = true }
+                                        launchSingleTop = true
+                                    }
                                 }
                             } catch (e: IllegalArgumentException) {
-                                // Errores controlados de validación (campos vacíos, credenciales incorrectas, etc.)
+                                // Errores controlados (vacíos, credenciales incorrectas, etc.)
                                 errorMessage = e.message.toString()
                             } catch (_: Exception) {
-                                // Errores genéricos no esperados
                                 errorMessage = "Ha ocurrido un error"
                             }
                         }

@@ -27,7 +27,7 @@ import com.example.gesport.ui.components.PrimaryButton
  *
  * Utiliza:
  * - GesUserViewModel para leer/guardar usuarios en el repositorio.
- * - LoginLogic para reutilizar las validaciones de nombre, email y contraseñas.
+ * - LoginLogic para reutilizar las validaciones de nombre, email y contraseñasss.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,6 +49,7 @@ fun AddUserScreen(
     var password by remember { mutableStateOf("") }
     var repeatPassword by remember { mutableStateOf("") }
     var rol by remember { mutableStateOf("JUGADOR") } // por defecto
+    var age by remember { mutableStateOf("")}
 
     // Estados de error por campo
     var nameError by remember { mutableStateOf<String?>(null) }
@@ -66,7 +67,7 @@ fun AddUserScreen(
             viewModel.loadUserById(userId) { user ->
                 if (user != null) {
                     // Rellenamos el formulario con los datos del usuario
-                    name = user.name
+                    name = user.nombre
                     email = user.email
                     password = user.password
                     repeatPassword = user.password
@@ -301,10 +302,11 @@ fun AddUserScreen(
                         val user = User(
                             // En modo crear se ignora y el repo asigna ID
                             id = userId ?: 0,
-                            name = name.trim(),
+                            nombre = name.trim(),
                             email = email.trim(),
                             password = password,
-                            rol = rol
+                            rol = rol,
+                            edad = age,
                         )
 
                         // Llamamos al ViewModel según el modo

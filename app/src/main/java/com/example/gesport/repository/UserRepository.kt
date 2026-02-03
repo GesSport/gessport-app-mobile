@@ -1,24 +1,38 @@
 package com.example.gesport.repository
 
 import com.example.gesport.models.User
+import kotlinx.coroutines.flow.Flow
 
 interface UserRepository {
 
-    /** Obtener una lista con todos los usuarios */
-    suspend fun getAllUsers(): List<User>
+    // ROOM + Compose: Flow para observar cambios en tiempo real
+    fun getAllUsers(): Flow<List<User>>
+    fun getUsersByRole(role: String): Flow<List<User>>
 
-    /** Obtener una lista de usaurios por rol */
-    suspend fun getUsersByRole(rol: String): List<User>
+    /*
+
+    // ❌ (Modo antiguo sin Room / sin Flow)
+    suspend fun getAllUsers(): List<User>
+    suspend fun getUsersByRole(rol: String): List<User)
+
+    */
+
+    /** Obtener un usuario por email*/
+    suspend fun getUserByEmail(email: String): User?
 
     /** Obtener un usuario por id */
     suspend fun getUserById(id: Int): User?
 
-    /** Crear usuario nuevo */
+
+    /** CRUD */
     suspend fun addUser(user: User): User
-
-    /** Actualizar usuario existente (true si se ha podido actualizar) */
-    suspend fun updateUser(user: User): Boolean
-
-    /** Eliminar usuario por id (true si se ha eliminado alguno) */
+    suspend fun updateUser(user: User): Int
     suspend fun deleteUser(id: Int): Boolean
 }
+
+/*
+* PARA ROOM
+* Room trabaja con Flow<List<User>> (para que Compose actualice automáticamente los datos al insertarse o borrarse usuarios).
+*  fun getAllUsers(): Flow<List<User>>
+    fun getUsersByRole(role: String): Flow<List<User>>
+* */

@@ -7,26 +7,18 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.gesport.models.User
 import com.example.gesport.repository.UserRepository
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-/**
- * ViewModel responsable de la gestión de usuarios para la parte de backend (GesUser).
- *
- * Se encarga de:
- * - Cargar la lista de usuarios desde el repositorio.
- * - Mantener en memoria la lista completa y la lista filtrada.
- * - Aplicar filtros por rol y por texto de búsqueda.
- * - Crear, actualizar y eliminar usuarios.
- * - Exponer estados de carga y error para que la UI los muestre.
- */
 class GesUserViewModel(
     private val userRepository: UserRepository
 ) : ViewModel() {
 
-    // Lista completa desde el repositorio
+    // Lista base (la que viene de Room sin filtros)
     private var _allUsers by mutableStateOf<List<User>>(emptyList())
 
-    // Lista filtrada que ve la UI
+    // Lista filtrada (la que consume la UI)
     private var _users by mutableStateOf<List<User>>(emptyList())
     val users: List<User> get() = _users
 
@@ -45,145 +37,128 @@ class GesUserViewModel(
     private var _errorMessage by mutableStateOf<String?>(null)
     val errorMessage: String? get() = _errorMessage
 
+    // Para cancelar y re-suscribirse cuando cambie el rol
+    private var usersJob: Job? = null
+
     init {
-        // Al crear el ViewModel se carga la lista inicial de usuarios
-        refreshUsers()
+        // Al iniciar, suscripción a todos los usuarios
+        observeUsers(role = null)
     }
 
-    /** Carga la lista base desde el repositorio y aplica filtros/búsqueda */
-    fun refreshUsers() {
-        viewModelScope.launch {
+    /**
+     * Observa el Flow de Room.
+     * Si role == null -> getAllUsers()
+     * Si role != null -> getUsersByRole(role)
+     */
+    private fun observeUsers(role: String?) {
+        usersJob?.cancel()
+        usersJob = viewModelScope.launch {
             try {
                 _isLoading = true
                 _errorMessage = null
 
-                // Obtiene todos los usuarios desde el repositorio
-                _allUsers = userRepository.getAllUsers()
-                // Aplica filtros activos (rol + búsqueda) sobre la lista completa
-                applyFilters()
+                val flow = if (role == null) {
+                    userRepository.getAllUsers()
+                } else {
+                    userRepository.getUsersByRole(role)
+                }
+
+                flow.collectLatest { list ->
+                    _allUsers = list
+                    applyFilters()
+                    _isLoading = false
+                }
             } catch (e: Exception) {
                 _errorMessage = e.message ?: "Error al cargar los usuarios"
                 _allUsers = emptyList()
                 _users = emptyList()
-            } finally {
                 _isLoading = false
             }
         }
     }
 
-    /** Aplica rol + búsqueda sobre la lista base */
+    /** Aplica SOLO la búsqueda (y el rol ya viene filtrado por el Flow si está seleccionado). */
     private fun applyFilters() {
         var filtered = _allUsers
 
-        // Filtro por rol
-        _selectedRole?.let { role ->
-            filtered = filtered.filter { it.rol == role }
-        }
-
-        // Filtro por búsqueda (nombre o email)
-        val query = _searchQuery.trim()
-        if (query.isNotEmpty()) {
-            val q = query.lowercase()
+        // búsqueda por nombre/email
+        val q = _searchQuery.trim().lowercase()
+        if (q.isNotEmpty()) {
             filtered = filtered.filter { user ->
-                user.name.lowercase().contains(q) ||
+                user.nombre.lowercase().contains(q) ||
                         user.email.lowercase().contains(q)
             }
         }
 
-        // Actualiza la lista que consume directamente la UI
         _users = filtered
     }
 
-    /** Cambiar rol desde los chips */
+    /** Cambiar rol desde chips */
     fun onRoleSelected(rol: String?) {
         _selectedRole = rol
-        applyFilters()
+        observeUsers(role = rol)
     }
 
-    /** Cambiar texto de búsqueda desde la barra */
+    /** Cambiar texto de búsqueda */
     fun onSearchQueryChange(newQuery: String) {
         _searchQuery = newQuery
         applyFilters()
     }
 
-    /** Crear usuario nuevo */
+    /** Crear usuario */
     fun addUser(user: User) {
         viewModelScope.launch {
             try {
-                _isLoading = true
                 _errorMessage = null
-
-                // Inserta el nuevo usuario en el repositorio
                 userRepository.addUser(user)
-
-                // Recarga la lista completa tras la inserción y vuelve a filtrar
-                _allUsers = userRepository.getAllUsers()
-                applyFilters()
+                // No hace falta refresh: Flow se actualiza solo
             } catch (e: Exception) {
                 _errorMessage = e.message ?: "No se ha podido crear el usuario"
-            } finally {
-                _isLoading = false
             }
         }
     }
 
-    /** Actualizar usuario existente */
+    /** Actualizar usuario */
     fun updateUser(user: User) {
         viewModelScope.launch {
             try {
-                _isLoading = true
                 _errorMessage = null
-
-                // Intenta actualizar el usuario en el repositorio
-                val ok = userRepository.updateUser(user)
-                if (!ok) {
+                val rows = userRepository.updateUser(user)
+                if (rows <= 0) {
                     _errorMessage = "Este usuario ya no existe"
                 }
-
-                // Recarga la lista completa tras la actualización y vuelve a filtrar
-                _allUsers = userRepository.getAllUsers()
-                applyFilters()
+                // Flow actualiza automáticamente
             } catch (e: Exception) {
                 _errorMessage = e.message ?: "No se ha podido actualizar el usuario"
-            } finally {
-                _isLoading = false
             }
         }
     }
 
-    /** Eliminar usuario por id */
+    /** Eliminar usuario */
     fun deleteUser(id: Int) {
         viewModelScope.launch {
             try {
-                _isLoading = true
                 _errorMessage = null
-
-                // Intenta eliminar el usuario en el repositorio
                 val ok = userRepository.deleteUser(id)
                 if (!ok) {
                     _errorMessage = "No se ha podido borrar el usuario"
                 }
-
-                // Recarga la lista completa tras el borrado y vuelve a filtrar
-                _allUsers = userRepository.getAllUsers()
-                applyFilters()
+                // Flow actualiza automáticamente
             } catch (e: Exception) {
-                _errorMessage = e.message ?:"No se ha podido borrar el usuario"
-            } finally {
-                _isLoading = false
+                _errorMessage = e.message ?: "No se ha podido borrar el usuario"
             }
         }
     }
 
-    /** Obtener un usuario concreto para la pantalla de editar */
-    fun loadUserById(
-        id: Int,
-        onResult: (User?) -> Unit
-    ) {
+    /** Obtener un usuario para editar */
+    fun loadUserById(id: Int, onResult: (User?) -> Unit) {
         viewModelScope.launch {
-            // Consulta el usuario por id y devuelve el resultado al callback
-            val user = userRepository.getUserById(id)
-            onResult(user)
+            try {
+                val user = userRepository.getUserById(id)
+                onResult(user)
+            } catch (_: Exception) {
+                onResult(null)
+            }
         }
     }
 }

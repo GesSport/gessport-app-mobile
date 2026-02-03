@@ -1,17 +1,16 @@
 package com.example.gesport.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.gesport.data.DataUserRepository
 import com.example.gesport.ui.backend.ges_user.AddUserScreen
 import com.example.gesport.ui.backend.ges_user.GesUserScreen
 import com.example.gesport.ui.backend.ges_user.GesUserViewModel
+import com.example.gesport.ui.backend.ges_user.GesUserViewModelFactory
 import com.example.gesport.ui.dashboard.DashboardScreen
 import com.example.gesport.ui.home.HomeScreen
 import com.example.gesport.ui.login.LoginScreen
@@ -23,16 +22,11 @@ import com.example.gesport.ui.welcome.WelcomeScreen
 fun Navigation() {
     val navController = rememberNavController()
 
-    // viewModel y ViewModelProvider
-    val gesUserViewModel: GesUserViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
-        factory = object : ViewModelProvider.Factory {
-            @Suppress("UNCHECKED_CAST")
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                val repo = DataUserRepository   // tu singleton
-                return GesUserViewModel(repo) as T
-            }
-        }
-    )
+    val context = LocalContext.current
+    val gesUserViewModel: GesUserViewModel =
+        androidx.lifecycle.viewmodel.compose.viewModel(
+            factory = GesUserViewModelFactory(context.applicationContext)
+        )
 
     NavHost(
         navController = navController,

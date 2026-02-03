@@ -1,8 +1,8 @@
+package com.example.gesport.data
+
 // En desuso :( , ahora usamos DataUserRepository </3
 
 /*
-
-package com.example.gesport.data
 
 import com.example.gesport.models.User
 
