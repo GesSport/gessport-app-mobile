@@ -3,13 +3,12 @@ package com.example.gesport.models
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
-@Entity(
-    tableName = "equipos"
-)
-data class Team(
+@Entity(tableName = "instalaciones")
+data class Facility(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
     val nombre: String,
-    val categoria: String,
-    val entrenadorId: Int? = null
+    val tipoDeporte: String,
+    val disponible: Boolean = true,
+    val capacidad: Int? = null
 )

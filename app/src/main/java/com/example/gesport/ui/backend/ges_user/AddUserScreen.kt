@@ -49,7 +49,6 @@ fun AddUserScreen(
     var password by remember { mutableStateOf("") }
     var repeatPassword by remember { mutableStateOf("") }
     var rol by remember { mutableStateOf("JUGADOR") } // por defecto
-    var age by remember { mutableStateOf("")}
 
     // Estados de error por campo
     var nameError by remember { mutableStateOf<String?>(null) }
@@ -305,8 +304,7 @@ fun AddUserScreen(
                             nombre = name.trim(),
                             email = email.trim(),
                             password = password,
-                            rol = rol,
-                            edad = age,
+                            rol = rol
                         )
 
                         // Llamamos al ViewModel según el modo
