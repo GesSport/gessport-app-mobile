@@ -11,7 +11,7 @@ interface UserRepository {
 
     /*
 
-    // ❌ (Modo antiguo sin Room / sin Flow)
+    // (Modo antiguo sin Room / sin Flow)
     suspend fun getAllUsers(): List<User>
     suspend fun getUsersByRole(rol: String): List<User)
 

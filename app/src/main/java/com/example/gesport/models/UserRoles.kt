@@ -13,6 +13,12 @@ object UserRoles {
         ARBITRO to "Árbitro"
     )
 
+    val registerRoles = listOf(
+        ENTRENADOR,
+        JUGADOR,
+        ARBITRO
+    )
+
     // Colores por rol
     val roleColors = mapOf(
         ADMIN_DEPORTIVO to 0xFF4DA8DAL,

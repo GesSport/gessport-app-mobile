@@ -61,7 +61,7 @@ class LoginLogic(
     fun validatePhone(phone: String, requiredLength: Int = 9) {
         val v = phone.trim()
         if (v.isEmpty()) throw IllegalArgumentException("El teléfono no puede estar vacío.")
-        val phoneRegex = Regex("^\\d{$requiredLength}$")
+        val phoneRegex = Regex("^\\d*$requiredLength}$")
         if (!phoneRegex.matches(v)) {
             throw IllegalArgumentException("El teléfono debe tener $requiredLength números.")
         }

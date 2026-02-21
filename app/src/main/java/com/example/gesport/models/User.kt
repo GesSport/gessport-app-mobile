@@ -12,11 +12,8 @@ data class User (
     val email: String,
     val password: String,
     val rol: String,
-    val edad: Int? = null,
+    val fechaNacimiento: String? = null,
     val telefono: String? = null,
     val posicion: String? = null,
     val equipoId: Int? = null
-
-    // TO-DO: Hacer entidades de equipos, pistas y reservas
-    // edad, tlfn, posición equipoid
 )

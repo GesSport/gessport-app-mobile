@@ -43,4 +43,3 @@ interface UserDao {
     suspend fun deleteAll()
 }
 
-// TO-DO: Montar DAO  de Equipos, Pistas y Reservas.

@@ -2,7 +2,10 @@ package com.example.gesport.ui.dashboard
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoAwesomeMosaic
 import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -95,12 +98,12 @@ fun DashboardScreen(
 
                     DashboardTile(
                         label = "Equipos",
-                        icon = Icons.Default.Build,
+                        icon = Icons.Default.People,
                         modifier = Modifier.weight(1f)
                     ) {
-                        // TODO: Navegar a gestión de equipos
-                        // navController.navigate("")
+                        navController.navigate("gesteam")
                     }
+
                 }
 
                 Row(
@@ -109,21 +112,21 @@ fun DashboardScreen(
                 ) {
                     DashboardTile(
                         label = "Pistas",
-                        icon = Icons.Default.Build,
+                        icon = Icons.Default.AutoAwesomeMosaic,
                         modifier = Modifier.weight(1f)
                     ) {
-                        // TODO: Navegar a gestión de pistas
-                        // navController.navigate("")
+                        navController.navigate("gesfacility")
                     }
+
 
                     DashboardTile(
                         label = "Reservas",
-                        icon = Icons.Default.Build,
+                        icon = Icons.Default.CalendarToday,
                         modifier = Modifier.weight(1f)
                     ) {
-                        // TODO: Navegar a gestión de reservas
-                        // navController.navigate("")
+                        navController.navigate("gesreservation")
                     }
+
                 }
             }
         }

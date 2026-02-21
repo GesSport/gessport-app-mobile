@@ -1,28 +1,28 @@
-package com.example.gesport.ui.backend.ges_user
+package com.example.gesport.ui.backend.ges_facility
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.gesport.models.User
-import com.example.gesport.repository.UserRepository
+import com.example.gesport.models.Facility
+import com.example.gesport.repository.FacilityRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-class GesUserViewModel(
-    private val userRepository: UserRepository
+class GesFacilityViewModel(
+    private val facilityRepository: FacilityRepository
 ) : ViewModel() {
 
-    private var _allUsers by mutableStateOf<List<User>>(emptyList())
+    private var _allFacilities by mutableStateOf<List<Facility>>(emptyList())
 
-    private var _users by mutableStateOf<List<User>>(emptyList())
-    val users: List<User> get() = _users
+    private var _facilities by mutableStateOf<List<Facility>>(emptyList())
+    val facilities: List<Facility> get() = _facilities
 
-    private var _selectedRole by mutableStateOf<String?>(null)
-    val selectedRole: String? get() = _selectedRole
+    private var _selectedSport by mutableStateOf<String?>(null)
+    val selectedSport: String? get() = _selectedSport
 
     private var _searchQuery by mutableStateOf("")
     val searchQuery: String get() = _searchQuery
@@ -33,28 +33,28 @@ class GesUserViewModel(
     private var _errorMessage by mutableStateOf<String?>(null)
     val errorMessage: String? get() = _errorMessage
 
-    private var usersJob: Job? = null
+    private var facilitiesJob: Job? = null
 
     init {
-        observeUsers(role = null)
+        observeFacilities(sport = null)
     }
 
-    private fun observeUsers(role: String?) {
-        usersJob?.cancel()
+    private fun observeFacilities(sport: String?) {
+        facilitiesJob?.cancel()
 
-        usersJob = viewModelScope.launch {
+        facilitiesJob = viewModelScope.launch {
             _isLoading = true
             _errorMessage = null
 
             try {
-                val flow = if (role == null) {
-                    userRepository.getAllUsers()
+                val flow = if (sport == null) {
+                    facilityRepository.getAllFacilities()
                 } else {
-                    userRepository.getUsersByRole(role)
+                    facilityRepository.getFacilitiesBySport(sport)
                 }
 
                 flow.collectLatest { list ->
-                    _allUsers = list
+                    _allFacilities = list
                     applyFilters()
                     _isLoading = false
                 }
@@ -62,31 +62,30 @@ class GesUserViewModel(
                 _isLoading = false
                 throw e
             } catch (e: Exception) {
-                _errorMessage = e.message ?: "Error al cargar los usuarios"
-                _allUsers = emptyList()
-                _users = emptyList()
+                _errorMessage = e.message ?: "Error al cargar las instalaciones"
+                _allFacilities = emptyList()
+                _facilities = emptyList()
                 _isLoading = false
             }
         }
     }
 
     private fun applyFilters() {
-        var filtered = _allUsers
+        var filtered = _allFacilities
 
         val q = _searchQuery.trim().lowercase()
         if (q.isNotEmpty()) {
-            filtered = filtered.filter { user ->
-                user.nombre.lowercase().contains(q) ||
-                        user.email.lowercase().contains(q)
+            filtered = filtered.filter { facility ->
+                facility.nombre.lowercase().contains(q)
             }
         }
 
-        _users = filtered
+        _facilities = filtered
     }
 
-    fun onRoleSelected(rol: String?) {
-        _selectedRole = rol
-        observeUsers(role = rol)
+    fun onSportSelected(sport: String?) {
+        _selectedSport = sport
+        observeFacilities(sport = sport)
     }
 
     fun onSearchQueryChange(newQuery: String) {
@@ -94,56 +93,52 @@ class GesUserViewModel(
         applyFilters()
     }
 
-    fun addUser(user: User) {
+    fun addFacility(facility: Facility) {
         viewModelScope.launch {
             try {
                 _errorMessage = null
-                userRepository.addUser(user)
+                facilityRepository.addFacility(facility)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                _errorMessage = e.message ?: "No se ha podido crear el usuario"
+                _errorMessage = e.message ?: "No se ha podido crear la instalación"
             }
         }
     }
 
-    fun updateUser(user: User) {
+    fun updateFacility(facility: Facility) {
         viewModelScope.launch {
             try {
                 _errorMessage = null
-                val rows = userRepository.updateUser(user)
-                if (rows <= 0) {
-                    _errorMessage = "Este usuario ya no existe"
-                }
+                val rows = facilityRepository.updateFacility(facility)
+                if (rows <= 0) _errorMessage = "Esta instalación ya no existe"
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                _errorMessage = e.message ?: "No se ha podido actualizar el usuario"
+                _errorMessage = e.message ?: "No se ha podido actualizar la instalación"
             }
         }
     }
 
-    fun deleteUser(id: Int) {
+    fun deleteFacility(id: Int) {
         viewModelScope.launch {
             try {
                 _errorMessage = null
-                val ok = userRepository.deleteUser(id)
-                if (!ok) {
-                    _errorMessage = "No se ha podido borrar el usuario"
-                }
+                val ok = facilityRepository.deleteFacility(id)
+                if (!ok) _errorMessage = "No se ha podido borrar la instalación"
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                _errorMessage = e.message ?: "No se ha podido borrar el usuario"
+                _errorMessage = e.message ?: "No se ha podido borrar la instalación"
             }
         }
     }
 
-    fun loadUserById(id: Int, onResult: (User?) -> Unit) {
+    fun loadFacilityById(id: Int, onResult: (Facility?) -> Unit) {
         viewModelScope.launch {
             try {
-                val user = userRepository.getUserById(id)
-                onResult(user)
+                val facility = facilityRepository.getFacilityById(id)
+                onResult(facility)
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Exception) {

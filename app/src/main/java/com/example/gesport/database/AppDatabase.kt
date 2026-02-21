@@ -41,7 +41,7 @@ abstract class AppDatabase : RoomDatabase() {
                     "gessport_db"
                 )
                     // Si cambias el schema y no haces migrations todavía, esto evita crash:
-                    // .fallbackToDestructiveMigration()
+                    //.fallbackToDestructiveMigration()
                     .build()
 
                 INSTANCE = instance

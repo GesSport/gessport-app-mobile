@@ -1,19 +1,13 @@
-package com.example.gesport.ui.backend.ges_user
+package com.example.gesport.ui.backend.ges_team
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,25 +17,27 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.gesport.R
-import com.example.gesport.models.User
-import com.example.gesport.models.UserRoles
+import com.example.gesport.models.Sports
+import com.example.gesport.models.Team
 import com.example.gesport.ui.components.GeSportBackgroundScreen
 import com.example.gesport.ui.components.Input
-import com.example.gesport.ui.components.UserCard
+import com.example.gesport.ui.components.TeamCard
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-fun GesUserScreen(
+fun GesTeamScreen(
     navController: NavHostController,
-    viewModel: GesUserViewModel
+    viewModel: GesTeamViewModel
 ) {
-    val users = viewModel.users
-    val selectedRole = viewModel.selectedRole
+
+    val teams = viewModel.teams
+    val selectedCategory = viewModel.selectedCategory
     val searchQuery = viewModel.searchQuery
     val isLoading = viewModel.isLoading
     val errorMessage = viewModel.errorMessage
+    val trainers = viewModel.trainers
 
-    var userToDelete by remember { mutableStateOf<User?>(null) }
+    var teamToDelete by remember { mutableStateOf<Team?>(null) }
 
     val chipColors = FilterChipDefaults.filterChipColors(
         containerColor = Color.White.copy(alpha = 0.20f),
@@ -51,128 +47,95 @@ fun GesUserScreen(
     )
 
     Box(modifier = Modifier.fillMaxSize()) {
+
         GeSportBackgroundScreen {
+
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(horizontal = 20.dp, vertical = 16.dp)
             ) {
-                // Header
+
+                // HEADER
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(120.dp)
                 ) {
                     Column(
-                        modifier = Modifier.align(Alignment.BottomStart),
-                        horizontalAlignment = Alignment.Start
+                        modifier = Modifier.align(Alignment.BottomStart)
                     ) {
                         Text(
-                            text = "Gestión de usuarios",
+                            text = "Gestión de equipos",
                             color = Color.White,
                             fontSize = 30.sp,
                             fontWeight = FontWeight.SemiBold
                         )
                         Spacer(Modifier.height(4.dp))
                         Text(
-                            text = "Administra los usuarios registrados en el sistema.",
+                            text = "Administra los equipos registrados en el sistema.",
                             color = Color.White.copy(alpha = 0.65f),
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Normal
+                            fontSize = 15.sp
                         )
                     }
                 }
 
                 Spacer(Modifier.height(20.dp))
 
-                // Buscar
+                // BUSCADOR
                 Input(
                     value = searchQuery,
                     onValueChange = { viewModel.onSearchQueryChange(it) },
-                    placeholder = "Buscar por nombre o email",
+                    placeholder = "Buscar por nombre de equipo",
                     leadingIconRes = R.drawable.icon_user
                 )
 
                 Spacer(Modifier.height(8.dp))
 
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(0.dp)
+                // FILTRO POR DEPORTE (multilínea)
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(0.dp),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    // Línea 1: Todos, Admin
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        FilterChip(
-                            selected = selectedRole == null,
-                            onClick = { viewModel.onRoleSelected(null) },
-                            label = { Text("Todos") },
-                            colors = chipColors,
-                            border = null
-                        )
+                    FilterChip(
+                        selected = selectedCategory == null,
+                        onClick = { viewModel.onCategorySelected(null) },
+                        label = { Text("Todos") },
+                        colors = chipColors,
+                        border = null
+                    )
 
-                        val adminKey = UserRoles.ADMIN_DEPORTIVO
-                        val adminLabel = UserRoles.allRoles[adminKey] ?: "Admin"
-
+                    Sports.allSports.forEach { (key, label) ->
                         FilterChip(
-                            selected = selectedRole == adminKey,
+                            selected = selectedCategory == key,
                             onClick = {
-                                val newRole = if (selectedRole == adminKey) null else adminKey
-                                viewModel.onRoleSelected(newRole)
+                                val newCat = if (selectedCategory == key) null else key
+                                viewModel.onCategorySelected(newCat)
                             },
-                            label = { Text(adminLabel) },
+                            label = { Text(label) },
                             colors = chipColors,
                             border = null
                         )
-                    }
-
-                    // Línea 2: Entrenador, Jugador, Árbitro
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        val rolesLine2 = listOf(
-                            UserRoles.ENTRENADOR,
-                            UserRoles.JUGADOR,
-                            UserRoles.ARBITRO
-                        )
-
-                        rolesLine2.forEach { roleKey ->
-                            val roleLabel = UserRoles.allRoles[roleKey] ?: roleKey
-
-                            FilterChip(
-                                selected = selectedRole == roleKey,
-                                onClick = {
-                                    val newRole = if (selectedRole == roleKey) null else roleKey
-                                    viewModel.onRoleSelected(newRole)
-                                },
-                                label = { Text(roleLabel) },
-                                colors = chipColors,
-                                border = null
-                            )
-                        }
                     }
                 }
 
-                // Error
                 if (!errorMessage.isNullOrEmpty()) {
                     Spacer(Modifier.height(6.dp))
                     Text(text = errorMessage, color = Color(0xFFFF6B6B))
                 }
 
-                // Spacer REAL para separar chips de la lista (esto evita que se junten)
                 Spacer(Modifier.height(12.dp))
 
-                // Contenido principal
+                // CONTENIDO
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f)
                 ) {
+
                     when {
+
                         isLoading -> {
                             Column(
                                 modifier = Modifier.fillMaxSize(),
@@ -182,20 +145,20 @@ fun GesUserScreen(
                                 CircularProgressIndicator(color = Color(0xFF2DAAE1))
                                 Spacer(Modifier.height(8.dp))
                                 Text(
-                                    text = "Cargando usuarios...",
+                                    text = "Cargando equipos...",
                                     color = Color.White.copy(alpha = 0.7f)
                                 )
                             }
                         }
 
-                        users.isEmpty() -> {
+                        teams.isEmpty() -> {
                             Column(
                                 modifier = Modifier.fillMaxSize(),
                                 verticalArrangement = Arrangement.Center,
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Text(
-                                    text = "No hay usuarios todavía",
+                                    text = "No hay equipos todavía",
                                     color = Color.White,
                                     fontWeight = FontWeight.SemiBold
                                 )
@@ -211,16 +174,20 @@ fun GesUserScreen(
                             LazyColumn(
                                 verticalArrangement = Arrangement.spacedBy(12.dp),
                                 modifier = Modifier.fillMaxSize()
-                                // IMPORTANTE: quitamos offset para que NO se meta bajo los chips
                             ) {
                                 items(
-                                    items = users,
+                                    items = teams,
                                     key = { it.id }
-                                ) { user ->
-                                    UserCard(
-                                        user = user,
-                                        onEdit = { navController.navigate("formuser/${user.id}") },
-                                        onDelete = { userToDelete = user }
+                                ) { team ->
+
+                                    val trainerName =
+                                        trainers.firstOrNull { it.id == team.entrenadorId }?.nombre
+
+                                    TeamCard(
+                                        team = team,
+                                        trainerName = trainerName,
+                                        onEdit = { navController.navigate("formteam/${team.id}") },
+                                        onDelete = { teamToDelete = team }
                                     )
                                 }
                             }
@@ -232,34 +199,34 @@ fun GesUserScreen(
 
         // FAB
         FloatingActionButton(
-            onClick = { navController.navigate("formuser") },
+            onClick = { navController.navigate("formteam") },
             containerColor = Color(0xFF2DAAE1).copy(alpha = 0.40f),
             contentColor = Color.White,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(end = 20.dp, bottom = 70.dp)
         ) {
-            Icon(imageVector = Icons.Default.Add, contentDescription = "Añadir usuario")
+            Icon(imageVector = Icons.Default.Add, contentDescription = "Añadir equipo")
         }
 
-        // Diálogo eliminar
-        userToDelete?.let { user ->
+        // DIÁLOGO BORRAR
+        teamToDelete?.let { team ->
             AlertDialog(
-                onDismissRequest = { userToDelete = null },
-                title = { Text("Eliminar usuario", fontWeight = FontWeight.Bold) },
-                text = { Text("¿Seguro que quieres eliminar a ${user.nombre}?") },
+                onDismissRequest = { teamToDelete = null },
+                title = { Text("Eliminar equipo", fontWeight = FontWeight.Bold) },
+                text = { Text("¿Seguro que quieres eliminar a ${team.nombre}?") },
                 confirmButton = {
                     TextButton(
                         onClick = {
-                            viewModel.deleteUser(user.id)
-                            userToDelete = null
+                            viewModel.deleteTeam(team.id)
+                            teamToDelete = null
                         }
                     ) {
                         Text("Eliminar", color = Color(0xFFFF6B6B))
                     }
                 },
                 dismissButton = {
-                    TextButton(onClick = { userToDelete = null }) {
+                    TextButton(onClick = { teamToDelete = null }) {
                         Text("Cancelar")
                     }
                 },

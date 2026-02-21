@@ -10,5 +10,6 @@ data class Facility(
     val nombre: String,
     val tipoDeporte: String,
     val disponible: Boolean = true,
-    val capacidad: Int? = null
+    val capacidad: Int? = null,
+    val localizacion: String? = null
 )

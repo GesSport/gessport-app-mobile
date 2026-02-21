@@ -21,7 +21,7 @@ class GesUserViewModelFactory(
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        // Crear la base de datos (NECESITA Context)
+
         val database = AppDatabase.getDatabase(appContext)
 
         // Obtener el DAO

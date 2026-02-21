@@ -11,7 +11,7 @@ class RoomUserRepository(private val userDao: UserDao) : UserRepository {
         userDao.getAll()
 
     override fun getUsersByRole(role: String): Flow<List<User>> =
-        userDao.getByRole(role) // 🔧 Añadimos este método en el DAO
+        userDao.getByRole(role)
 
     override suspend fun getUserByEmail(email: String): User? =
         userDao.getByEmail(email)
