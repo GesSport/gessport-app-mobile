@@ -993,7 +993,7 @@ Gracias al patrón Repository, solo habría que implementar esta clase. El resto
 
 ---
 
-## ❓ Preguntas Frecuentes para la Defensa
+## ❓ Preguntas Frecuentes
 
 **P: ¿Por qué usas MVVM y no MVC?**
 > En Android, el controlador (Activity) tiene acceso directo a la View, lo que lleva a clases enormes con mezcla de lógica y UI. MVVM separa el estado en el ViewModel, que no conoce ni depende de la View. Además, el ViewModel sobrevive a los cambios de configuración (rotaciones), cosa que el Controller no hace.
