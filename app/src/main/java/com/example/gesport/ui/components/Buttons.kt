@@ -17,19 +17,25 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.gesport.R
+
 @Composable
 fun PrimaryButton(
     text: String,
+    enabled: Boolean = true,
     onClick: () -> Unit
 ) {
     Button(
         onClick = onClick,
+        enabled = enabled,
         modifier = Modifier
             .fillMaxWidth()
             .height(48.dp),
         shape = RoundedCornerShape(4.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = Color(0xFF2DAAE1).copy(alpha = 0.40f),
+            containerColor = if (enabled)
+                Color(0xFF2DAAE1).copy(alpha = 0.40f)
+            else
+                Color.Gray.copy(alpha = 0.25f),
             contentColor = Color.White
         )
     ) {

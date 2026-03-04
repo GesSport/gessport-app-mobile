@@ -9,6 +9,9 @@ interface TeamRepository {
     fun getAllTeams(): Flow<List<Team>>
     fun getTeamsByCategory(category: String): Flow<List<Team>>
 
+    // Equipos de un entrenador
+    fun getTeamsByTrainer(trainerId: Int): Flow<List<Team>>
+
     /** Obtener un equipo por id */
     suspend fun getTeamById(id: Int): Team?
 

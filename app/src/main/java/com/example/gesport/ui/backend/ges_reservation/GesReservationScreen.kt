@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.gesport.R
 import com.example.gesport.models.Reservation
+import com.example.gesport.models.UserRoles
 import com.example.gesport.ui.components.GeSportBackgroundScreen
 import com.example.gesport.ui.components.Input
 import com.example.gesport.ui.components.ReservationCard
@@ -30,10 +31,24 @@ private enum class ReservationTimeFilter { ALL, PAST, TODAY, FUTURE }
 @Composable
 fun GesReservationScreen(
     navController: NavHostController,
-    viewModel: GesReservationViewModel
+    viewModel: GesReservationViewModel,
+    currentUserId: Int,
+    currentUserRole: String
 ) {
-    LaunchedEffect(Unit) {
-        viewModel.loadAllReservations()
+    val roleKey = remember(currentUserRole) {
+        currentUserRole.trim().takeIf { it.isNotEmpty() } ?: UserRoles.JUGADOR
+    }
+
+    val isAdmin = roleKey == UserRoles.ADMIN_DEPORTIVO
+    val isTrainer = roleKey == UserRoles.ENTRENADOR
+
+    // Cargar según rol
+    LaunchedEffect(currentUserId, roleKey) {
+        when (roleKey) {
+            UserRoles.ADMIN_DEPORTIVO -> viewModel.loadAllReservations()
+            UserRoles.ENTRENADOR -> viewModel.loadReservationsForTrainer(currentUserId)
+            else -> viewModel.loadReservationsForUser(currentUserId)
+        }
     }
 
     val reservations = viewModel.allReservations
@@ -41,10 +56,7 @@ fun GesReservationScreen(
     val errorMessage = viewModel.errorMessage
 
     var searchQuery by remember { mutableStateOf("") }
-
-    // ✅ Chips: Todas / Pasadas / Hoy / Futuras
     var timeFilter by remember { mutableStateOf(ReservationTimeFilter.FUTURE) }
-
     var reservationToDelete by remember { mutableStateOf<Reservation?>(null) }
 
     val chipColors = FilterChipDefaults.filterChipColors(
@@ -54,16 +66,11 @@ fun GesReservationScreen(
         selectedLabelColor = Color.White
     )
 
-    val today = remember {
-        LocalDate.now(ZoneId.of("Europe/Madrid"))
-    }
+    val today = remember { LocalDate.now(ZoneId.of("Europe/Madrid")) }
 
     fun matchesTimeFilter(res: Reservation): Boolean {
         if (timeFilter == ReservationTimeFilter.ALL) return true
-
-        val d = runCatching { LocalDate.parse(res.fecha) }.getOrNull()
-            ?: return false // si no parsea, no lo metemos en pasadas/hoy/futuras
-
+        val d = runCatching { LocalDate.parse(res.fecha) }.getOrNull() ?: return false
         return when (timeFilter) {
             ReservationTimeFilter.PAST -> d.isBefore(today)
             ReservationTimeFilter.TODAY -> d.isEqual(today)
@@ -72,7 +79,7 @@ fun GesReservationScreen(
         }
     }
 
-    val filtered by remember(reservations, searchQuery, viewModel.users, timeFilter) {
+    val filtered by remember(reservations, searchQuery, viewModel.users, viewModel.teams, timeFilter) {
         derivedStateOf {
             val q = searchQuery.trim().lowercase()
 
@@ -83,18 +90,25 @@ fun GesReservationScreen(
                     if (q.isEmpty()) return@filter true
 
                     val facilityName = viewModel.getFacilityNameById(res.pistaId).orEmpty().lowercase()
-                    val userName = viewModel.getUserNameById(res.usuarioId).orEmpty().lowercase()
 
-                    val userEmail = runCatching { viewModel.getUserEmailById(res.usuarioId) }
-                        .getOrNull().orEmpty().lowercase()
+                    val userName = res.usuarioId?.let { viewModel.getUserNameById(it) }.orEmpty().lowercase()
+                    val userEmail = res.usuarioId?.let { viewModel.getUserEmailById(it) }.orEmpty().lowercase()
+                    val userRole = res.usuarioId?.let { viewModel.getUserById(it)?.rol }.orEmpty().lowercase()
 
-                    val userRole = runCatching { viewModel.getUserById(res.usuarioId)?.rol }
-                        .getOrNull().orEmpty().lowercase()
+                    val teamName = res.equipoId?.let { viewModel.getTeamNameById(it) }.orEmpty().lowercase()
+
+                    val createdByName = viewModel.getUserNameById(res.creadaPorUserId).orEmpty().lowercase()
+                    val createdByEmail = viewModel.getUserEmailById(res.creadaPorUserId).orEmpty().lowercase()
+                    val createdByRole = viewModel.getUserById(res.creadaPorUserId)?.rol.orEmpty().lowercase()
 
                     facilityName.contains(q) ||
                             userName.contains(q) ||
                             userEmail.contains(q) ||
                             userRole.contains(q) ||
+                            teamName.contains(q) ||
+                            createdByName.contains(q) ||
+                            createdByEmail.contains(q) ||
+                            createdByRole.contains(q) ||
                             res.fecha.lowercase().contains(q) ||
                             res.horaInicio.lowercase().contains(q) ||
                             res.horaFin.lowercase().contains(q) ||
@@ -105,6 +119,33 @@ fun GesReservationScreen(
         }
     }
 
+    // equipos del entrenador (SSOT local para UI)
+    val trainerTeamIds = remember(viewModel.teams, currentUserId, isTrainer) {
+        if (!isTrainer) emptySet()
+        else viewModel.teams
+            .filter { it.entrenadorId == currentUserId }
+            .map { it.id }
+            .toSet()
+    }
+
+    // Regla EXACTA:
+    // - ADMIN: todo
+    // - ENTRENADOR: personales propias + reservas de equipos donde es entrenador
+    // - RESTO: solo personales propias
+    fun canManage(res: Reservation): Boolean {
+        if (isAdmin) return true
+
+        val isPersonal = res.equipoId == null
+        if (roleKey == UserRoles.ENTRENADOR) {
+            return (isPersonal && res.usuarioId == currentUserId) ||
+                    (!isPersonal && res.equipoId != null && trainerTeamIds.contains(res.equipoId))
+        }
+
+        return isPersonal && res.usuarioId == currentUserId
+    }
+
+    val canCreateReservation = true // siempre puede crear SU reserva; la validación real está en VM
+
     Box(modifier = Modifier.fillMaxSize()) {
         GeSportBackgroundScreen {
             Column(
@@ -112,7 +153,6 @@ fun GesReservationScreen(
                     .fillMaxSize()
                     .padding(horizontal = 20.dp, vertical = 16.dp)
             ) {
-                // HEADER
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -120,14 +160,18 @@ fun GesReservationScreen(
                 ) {
                     Column(modifier = Modifier.align(Alignment.BottomStart)) {
                         Text(
-                            text = "Gestión de reservas",
+                            text = "Reservas",
                             color = Color.White,
                             fontSize = 30.sp,
                             fontWeight = FontWeight.SemiBold
                         )
                         Spacer(Modifier.height(4.dp))
                         Text(
-                            text = "Administra las reservas registradas en el sistema.",
+                            text = when (roleKey) {
+                                UserRoles.ADMIN_DEPORTIVO -> "Administra todas las reservas del sistema."
+                                UserRoles.ENTRENADOR -> "Consulta y gestiona tus reservas y las de tus equipos."
+                                else -> "Consulta tus reservas personales."
+                            },
                             color = Color.White.copy(alpha = 0.65f),
                             fontSize = 15.sp
                         )
@@ -136,10 +180,8 @@ fun GesReservationScreen(
 
                 Spacer(Modifier.height(16.dp))
 
-                // ✅ CHIPS TEMPORALES (TODAS / PASADAS / HOY / FUTURAS)
                 FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(0.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     FilterChip(
@@ -174,11 +216,10 @@ fun GesReservationScreen(
 
                 Spacer(Modifier.height(10.dp))
 
-                // BUSCADOR
                 Input(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
-                    placeholder = "Buscar por pista, usuario, fecha...",
+                    placeholder = "Buscar por pista, equipo, fecha...",
                     leadingIconRes = R.drawable.icon_user
                 )
 
@@ -189,7 +230,6 @@ fun GesReservationScreen(
 
                 Spacer(Modifier.height(12.dp))
 
-                // CONTENIDO
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -204,36 +244,21 @@ fun GesReservationScreen(
                             ) {
                                 CircularProgressIndicator(color = Color(0xFF2DAAE1))
                                 Spacer(Modifier.height(8.dp))
-                                Text(
-                                    text = "Cargando reservas...",
-                                    color = Color.White.copy(alpha = 0.7f)
-                                )
+                                Text("Cargando reservas...", color = Color.White.copy(alpha = 0.7f))
                             }
                         }
 
                         filtered.isEmpty() -> {
-                            val emptyText = when (timeFilter) {
-                                ReservationTimeFilter.ALL -> "No hay reservas todavía"
-                                ReservationTimeFilter.PAST -> "No hay reservas pasadas"
-                                ReservationTimeFilter.TODAY -> "No hay reservas para hoy"
-                                ReservationTimeFilter.FUTURE -> "No hay reservas futuras"
-                            }
-
                             Column(
                                 modifier = Modifier.fillMaxSize(),
                                 verticalArrangement = Arrangement.Center,
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                Text(
-                                    text = emptyText,
-                                    color = Color.White,
-                                    fontWeight = FontWeight.SemiBold
-                                )
+                                Text("No hay reservas", color = Color.White, fontWeight = FontWeight.SemiBold)
                                 Spacer(Modifier.height(4.dp))
-                                Text(
-                                    text = "Pulsa el botón + para crear una",
-                                    color = Color.White.copy(alpha = 0.7f)
-                                )
+                                if (canCreateReservation) {
+                                    Text("Pulsa el botón + para crear una", color = Color.White.copy(alpha = 0.7f))
+                                }
                             }
                         }
 
@@ -242,15 +267,20 @@ fun GesReservationScreen(
                                 verticalArrangement = Arrangement.spacedBy(12.dp),
                                 modifier = Modifier.fillMaxSize()
                             ) {
-                                items(
-                                    items = filtered,
-                                    key = { it.id }
-                                ) { res ->
+                                items(filtered, key = { it.id }) { res ->
+                                    val allowManage = canManage(res)
+
                                     ReservationCard(
                                         reservation = res,
-                                        facility = runCatching { viewModel.getFacilityById(res.pistaId) }.getOrNull(),
-                                        user = runCatching { viewModel.getUserById(res.usuarioId) }.getOrNull(),
-                                        onEdit = { navController.navigate("formreservation/${res.id}") },
+                                        facility = viewModel.getFacilityById(res.pistaId),
+                                        user = res.usuarioId?.let { viewModel.getUserById(it) },
+                                        team = res.equipoId?.let { viewModel.getTeamById(it) },
+                                        createdByUser = viewModel.getUserById(res.creadaPorUserId),
+                                        canEdit = allowManage,
+                                        canDelete = allowManage,
+                                        onEdit = {
+                                            navController.navigate("formreservation/$currentUserId/$roleKey/${res.id}")
+                                        },
                                         onDelete = { reservationToDelete = res }
                                     )
                                 }
@@ -261,20 +291,25 @@ fun GesReservationScreen(
             }
         }
 
-        // FAB
-        FloatingActionButton(
-            onClick = { navController.navigate("formreservation") },
-            containerColor = Color(0xFF2DAAE1).copy(alpha = 0.40f),
-            contentColor = Color.White,
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(end = 20.dp, bottom = 70.dp)
-        ) {
-            Icon(imageVector = Icons.Default.Add, contentDescription = "Añadir reserva")
+        if (canCreateReservation) {
+            FloatingActionButton(
+                onClick = { navController.navigate("formreservation/$currentUserId/$roleKey") },
+                containerColor = Color(0xFF2DAAE1).copy(alpha = 0.40f),
+                contentColor = Color.White,
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 20.dp, bottom = 70.dp)
+            ) {
+                Icon(imageVector = Icons.Default.Add, contentDescription = "Añadir reserva")
+            }
         }
 
-        // DIÁLOGO BORRAR
         reservationToDelete?.let { res ->
+            if (!canManage(res)) {
+                reservationToDelete = null
+                return@let
+            }
+
             val facilityName = viewModel.getFacilityNameById(res.pistaId) ?: "Pista #${res.pistaId}"
             AlertDialog(
                 onDismissRequest = { reservationToDelete = null },
@@ -285,17 +320,17 @@ fun GesReservationScreen(
                 confirmButton = {
                     TextButton(
                         onClick = {
-                            viewModel.deleteReservation(res.id)
+                            viewModel.deleteReservation(
+                                currentUserId = currentUserId,
+                                currentUserRole = roleKey,
+                                reservationId = res.id
+                            )
                             reservationToDelete = null
                         }
-                    ) {
-                        Text("Eliminar", color = Color(0xFFFF6B6B))
-                    }
+                    ) { Text("Eliminar", color = Color(0xFFFF6B6B)) }
                 },
                 dismissButton = {
-                    TextButton(onClick = { reservationToDelete = null }) {
-                        Text("Cancelar")
-                    }
+                    TextButton(onClick = { reservationToDelete = null }) { Text("Cancelar") }
                 },
                 containerColor = Color.Black,
                 titleContentColor = Color.White,

@@ -163,7 +163,6 @@ fun GesUserScreen(
                     Text(text = errorMessage, color = Color(0xFFFF6B6B))
                 }
 
-                // Spacer REAL para separar chips de la lista (esto evita que se junten)
                 Spacer(Modifier.height(12.dp))
 
                 // Contenido principal

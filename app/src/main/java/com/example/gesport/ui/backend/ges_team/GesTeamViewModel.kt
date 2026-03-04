@@ -125,12 +125,54 @@ class GesTeamViewModel(
         }
     }
 
+    // ===================== HELPERS SYNC =====================
+
+    private suspend fun assignTrainerToTeam(trainerId: Int, teamId: Int) {
+        val trainer = userRepository.getUserById(trainerId) ?: return
+
+        if (trainer.rol != UserRoles.ENTRENADOR) return
+
+        if (trainer.equipoId == teamId) return
+
+        userRepository.updateUser(
+            trainer.copy(
+                equipoId = teamId,
+                // Posición solo aplica a jugador
+                posicion = null
+            )
+        )
+    }
+
+    private suspend fun unassignTrainerFromTeamIfMatches(trainerId: Int, teamId: Int) {
+        val trainer = userRepository.getUserById(trainerId) ?: return
+        if (trainer.rol != UserRoles.ENTRENADOR) return
+
+        // Solo lo quitamos si estaba asignado a ESTE equipo
+        if (trainer.equipoId != teamId) return
+
+        userRepository.updateUser(
+            trainer.copy(
+                equipoId = null,
+                posicion = null
+            )
+        )
+    }
+
     // ===================== CRUD =====================
+
     fun addTeam(team: Team) {
         viewModelScope.launch {
             try {
                 _errorMessage = null
-                teamRepository.addTeam(team)
+
+                // Crear equipo para obtener ID
+                val created = teamRepository.addTeam(team)
+
+                // Si hay entrenador, sincronizamos su equipoId
+                val trainerId = created.entrenadorId
+                if (trainerId != null) {
+                    assignTrainerToTeam(trainerId = trainerId, teamId = created.id)
+                }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -143,9 +185,28 @@ class GesTeamViewModel(
         viewModelScope.launch {
             try {
                 _errorMessage = null
+
+                // Cargar estado previo para detectar cambios de entrenador
+                val old = teamRepository.getTeamById(team.id)
+                val oldTrainerId = old?.entrenadorId
+                val newTrainerId = team.entrenadorId
+
                 val rows = teamRepository.updateTeam(team)
                 if (rows <= 0) {
                     _errorMessage = "Este equipo ya no existe"
+                    return@launch
+                }
+
+                // Si cambió el entrenador, sincronizamos:
+                if (oldTrainerId != newTrainerId) {
+                    // Quitar al anterior (si estaba en este equipo)
+                    if (oldTrainerId != null) {
+                        unassignTrainerFromTeamIfMatches(trainerId = oldTrainerId, teamId = team.id)
+                    }
+                    // Poner al nuevo
+                    if (newTrainerId != null) {
+                        assignTrainerToTeam(trainerId = newTrainerId, teamId = team.id)
+                    }
                 }
             } catch (e: CancellationException) {
                 throw e
@@ -159,6 +220,12 @@ class GesTeamViewModel(
         viewModelScope.launch {
             try {
                 _errorMessage = null
+
+                // 1) Limpiar a todos los usuarios que pertenezcan a este equipo (jugadores + entrenador)
+                //    (equipoId = null y posicion = null)
+                userRepository.clearTeamFromUsers(id)
+
+                // 2) Borrar equipo
                 val ok = teamRepository.deleteTeam(id)
                 if (!ok) {
                     _errorMessage = "No se ha podido borrar el equipo"

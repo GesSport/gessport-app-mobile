@@ -14,8 +14,8 @@ object UserRoles {
     )
 
     val registerRoles = listOf(
-        ENTRENADOR,
         JUGADOR,
+        ENTRENADOR,
         ARBITRO
     )
 

@@ -16,6 +16,11 @@ class RoomUserRepository(private val userDao: UserDao) : UserRepository {
     override suspend fun getUserByEmail(email: String): User? =
         userDao.getByEmail(email)
 
+    override fun getUsersByTeamId(teamId: Int): Flow<List<User>> =
+        userDao.getByTeamId(teamId)
+
+    override suspend fun clearTeamFromUsers(teamId: Int): Int =
+        userDao.clearTeamFromUsers(teamId)
 
     /** Obtener un usuario por id */
     override suspend fun getUserById(id: Int): User? =

@@ -215,26 +215,24 @@ fun LoginScreen(navController: NavHostController) {
                         errorMessage = ""
                         scope.launch {
                             try {
-                                // Autenticación usando LoginLogic (que a su vez usa RoomUserRepository)
                                 val user = logic.checkLogin(
                                     email = email.trim(),
                                     password = password
                                 )
 
-                                // Navegación según rol
+                                // Navegación con userId + name + role
                                 if (user.rol == UserRoles.ADMIN_DEPORTIVO) {
-                                    navController.navigate("dashboard/${user.nombre}") {
+                                    navController.navigate("dashboard/${user.id}/${user.nombre}/${user.rol}") {
                                         popUpTo("login") { inclusive = true }
                                         launchSingleTop = true
                                     }
                                 } else {
-                                    navController.navigate("home/${user.nombre}") {
+                                    navController.navigate("home/${user.id}/${user.nombre}/${user.rol}") {
                                         popUpTo("login") { inclusive = true }
                                         launchSingleTop = true
                                     }
                                 }
                             } catch (e: IllegalArgumentException) {
-                                // Errores controlados (vacíos, credenciales incorrectas, etc.)
                                 errorMessage = e.message.toString()
                             } catch (_: Exception) {
                                 errorMessage = "Ha ocurrido un error"
@@ -270,7 +268,6 @@ fun LoginScreen(navController: NavHostController) {
                     }
                 }
             }
-
         }
     }
 }

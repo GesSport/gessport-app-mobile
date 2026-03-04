@@ -13,6 +13,11 @@ class RoomTeamRepository(private val teamDao: TeamDao) : TeamRepository {
     override fun getTeamsByCategory(category: String): Flow<List<Team>> =
         teamDao.getByCategory(category)
 
+
+    override fun getTeamsByTrainer(trainerId: Int): Flow<List<Team>> =
+        teamDao.getByTrainer(trainerId)
+
+
     /** Obtener un equipo por id */
     override suspend fun getTeamById(id: Int): Team? =
         teamDao.getById(id)

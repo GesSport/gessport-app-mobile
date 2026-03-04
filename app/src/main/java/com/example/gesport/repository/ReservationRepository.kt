@@ -5,18 +5,22 @@ import kotlinx.coroutines.flow.Flow
 
 interface ReservationRepository {
 
-    // ROOM + Compose
+    // ADMIN
     fun getAllReservations(): Flow<List<Reservation>>
-    fun getReservationsByDate(date: String): Flow<List<Reservation>>
-    fun getReservationsByDateAndFacility(date: String, facilityId: Int): Flow<List<Reservation>>
-    fun getReservationsByUser(userId: Int): Flow<List<Reservation>>
-    fun getReservationsByFacility(facilityId: Int): Flow<List<Reservation>>
 
-    /** Obtener una reserva por id */
+    // FORM
     suspend fun getReservationById(id: Int): Reservation?
-
-    /** CRUD */
     suspend fun addReservation(reservation: Reservation): Reservation
     suspend fun updateReservation(reservation: Reservation): Int
     suspend fun deleteReservation(id: Int): Boolean
+
+    // GRID (fecha + pista)
+    fun getReservationsByDateAndFacility(date: String, facilityId: Int): Flow<List<Reservation>>
+
+    // Por rol
+    fun getReservationsByUser(userId: Int): Flow<List<Reservation>>
+    fun getReservationsByTeam(teamId: Int): Flow<List<Reservation>>
+
+    // ENTRENADOR: personales + equipos donde es entrenador
+    fun getReservationsForTrainer(trainerId: Int): Flow<List<Reservation>>
 }

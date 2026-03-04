@@ -1,5 +1,6 @@
 package com.example.gesport.navigation
 
+import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -8,6 +9,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.gesport.models.UserRoles
 import com.example.gesport.ui.backend.ges_facility.AddFacilityScreen
 import com.example.gesport.ui.backend.ges_facility.GesFacilityScreen
 import com.example.gesport.ui.backend.ges_facility.GesFacilityViewModel
@@ -31,27 +33,23 @@ import com.example.gesport.ui.login.RecoverPassScreen
 import com.example.gesport.ui.login.RegisterScreen
 import com.example.gesport.ui.welcome.WelcomeScreen
 
+private fun enc(s: String?): String = Uri.encode(s ?: "")
+private fun dec(s: String?): String = Uri.decode(s ?: "")
+
 @Composable
 fun Navigation() {
     val navController = rememberNavController()
     val context = LocalContext.current
 
-    // ViewModel de Users
     val gesUserViewModel: GesUserViewModel = viewModel(
         factory = GesUserViewModelFactory(context.applicationContext)
     )
-
-    // ViewModel de Facilities
     val gesFacilityViewModel: GesFacilityViewModel = viewModel(
         factory = GesFacilityViewModelFactory(context.applicationContext)
     )
-
-    // ViewModel de Teams
     val gesTeamViewModel: GesTeamViewModel = viewModel(
         factory = GesTeamViewModelFactory(context.applicationContext)
     )
-
-    // ViewModel de Reservations
     val gesReservationViewModel: GesReservationViewModel = viewModel(
         factory = GesReservationViewModelFactory(context.applicationContext)
     )
@@ -60,38 +58,85 @@ fun Navigation() {
         navController = navController,
         startDestination = "welcome"
     ) {
+        // ===================== AUTH =====================
+        composable("welcome") { WelcomeScreen(navController = navController) }
         composable("login") { LoginScreen(navController) }
         composable("register") { RegisterScreen(navController) }
         composable("recover") { RecoverPassScreen(navController) }
 
-        composable("welcome") {
-            WelcomeScreen(navController = navController)
+        // ===================== HOME / DASHBOARD =====================
+
+        composable(
+            route = "home/{userId}/{name}/{role}",
+            arguments = listOf(
+                navArgument("userId") { type = NavType.IntType },
+                navArgument("name") { type = NavType.StringType },
+                navArgument("role") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val userId = backStackEntry.arguments?.getInt("userId") ?: -1
+            val name = dec(backStackEntry.arguments?.getString("name"))
+            val role = dec(backStackEntry.arguments?.getString("role"))
+            HomeScreen(navController, userId, name, role)
+        }
+
+        composable(
+            route = "dashboard/{userId}/{name}/{role}",
+            arguments = listOf(
+                navArgument("userId") { type = NavType.IntType },
+                navArgument("name") { type = NavType.StringType },
+                navArgument("role") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val userId = backStackEntry.arguments?.getInt("userId") ?: -1
+            val name = dec(backStackEntry.arguments?.getString("name"))
+            val role = dec(backStackEntry.arguments?.getString("role"))
+            DashboardScreen(navController, userId, name, role)
+        }
+
+        composable(
+            route = "home/{name}/{role}",
+            arguments = listOf(
+                navArgument("name") { type = NavType.StringType },
+                navArgument("role") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val name = dec(backStackEntry.arguments?.getString("name"))
+            val role = dec(backStackEntry.arguments?.getString("role"))
+            HomeScreen(navController, -1, name, role)
         }
 
         composable(
             route = "home/{name}",
             arguments = listOf(navArgument("name") { type = NavType.StringType })
         ) { backStackEntry ->
-            val name = backStackEntry.arguments?.getString("name")
-            HomeScreen(navController, name)
+            val name = dec(backStackEntry.arguments?.getString("name"))
+            HomeScreen(navController, -1, name, UserRoles.JUGADOR)
+        }
+
+        composable(
+            route = "dashboard/{name}/{role}",
+            arguments = listOf(
+                navArgument("name") { type = NavType.StringType },
+                navArgument("role") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val name = dec(backStackEntry.arguments?.getString("name"))
+            val role = dec(backStackEntry.arguments?.getString("role"))
+            DashboardScreen(navController, -1, name, role)
         }
 
         composable(
             route = "dashboard/{name}",
             arguments = listOf(navArgument("name") { type = NavType.StringType })
         ) { backStackEntry ->
-            val name = backStackEntry.arguments?.getString("name")
-            DashboardScreen(navController, name)
+            val name = dec(backStackEntry.arguments?.getString("name"))
+            DashboardScreen(navController, -1, name, UserRoles.ADMIN_DEPORTIVO)
         }
 
         // ===================== USERS CRUD =====================
-        composable("gesuser") {
-            GesUserScreen(navController = navController, viewModel = gesUserViewModel)
-        }
-
-        composable("formuser") {
-            AddUserScreen(navController = navController, viewModel = gesUserViewModel, userId = null)
-        }
+        composable("gesuser") { GesUserScreen(navController = navController, viewModel = gesUserViewModel) }
+        composable("formuser") { AddUserScreen(navController = navController, viewModel = gesUserViewModel, userId = null) }
 
         composable(
             route = "formuser/{userId}",
@@ -102,13 +147,8 @@ fun Navigation() {
         }
 
         // ===================== FACILITIES CRUD =====================
-        composable("gesfacility") {
-            GesFacilityScreen(navController = navController, viewModel = gesFacilityViewModel)
-        }
-
-        composable("formfacility") {
-            AddFacilityScreen(navController = navController, viewModel = gesFacilityViewModel, facilityId = null)
-        }
+        composable("gesfacility") { GesFacilityScreen(navController = navController, viewModel = gesFacilityViewModel) }
+        composable("formfacility") { AddFacilityScreen(navController = navController, viewModel = gesFacilityViewModel, facilityId = null) }
 
         composable(
             route = "formfacility/{facilityId}",
@@ -119,13 +159,8 @@ fun Navigation() {
         }
 
         // ===================== TEAMS CRUD =====================
-        composable("gesteam") {
-            GesTeamScreen(navController = navController, viewModel = gesTeamViewModel)
-        }
-
-        composable("formteam") {
-            AddTeamScreen(navController = navController, viewModel = gesTeamViewModel, teamId = null)
-        }
+        composable("gesteam") { GesTeamScreen(navController = navController, viewModel = gesTeamViewModel) }
+        composable("formteam") { AddTeamScreen(navController = navController, viewModel = gesTeamViewModel, teamId = null) }
 
         composable(
             route = "formteam/{teamId}",
@@ -135,15 +170,94 @@ fun Navigation() {
             AddTeamScreen(navController = navController, viewModel = gesTeamViewModel, teamId = teamId)
         }
 
-        // ===================== RESERVATIONS =====================
+        // ===================== RESERVATIONS (con currentUserId + role) =====================
+
+        composable(
+            route = "gesreservation/{currentUserId}/{currentUserRole}",
+            arguments = listOf(
+                navArgument("currentUserId") { type = NavType.IntType },
+                navArgument("currentUserRole") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val currentUserId = backStackEntry.arguments?.getInt("currentUserId") ?: -1
+            val currentUserRole = dec(backStackEntry.arguments?.getString("currentUserRole"))
+
+            GesReservationScreen(
+                navController = navController,
+                viewModel = gesReservationViewModel,
+                currentUserId = currentUserId,
+                currentUserRole = currentUserRole
+            )
+        }
+
         composable("gesreservation") {
-            GesReservationScreen(navController = navController, viewModel = gesReservationViewModel)
+            GesReservationScreen(
+                navController = navController,
+                viewModel = gesReservationViewModel,
+                currentUserId = -1,
+                currentUserRole = ""
+            )
+        }
+
+        composable(
+            route = "gesreservation/{currentUserId}",
+            arguments = listOf(navArgument("currentUserId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val currentUserId = backStackEntry.arguments?.getInt("currentUserId") ?: -1
+            GesReservationScreen(
+                navController = navController,
+                viewModel = gesReservationViewModel,
+                currentUserId = currentUserId,
+                currentUserRole = ""
+            )
+        }
+
+        composable(
+            route = "formreservation/{currentUserId}/{currentUserRole}",
+            arguments = listOf(
+                navArgument("currentUserId") { type = NavType.IntType },
+                navArgument("currentUserRole") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val currentUserId = backStackEntry.arguments?.getInt("currentUserId") ?: -1
+            val currentUserRole = dec(backStackEntry.arguments?.getString("currentUserRole"))
+
+            AddReservationScreen(
+                navController = navController,
+                viewModel = gesReservationViewModel,
+                currentUserId = currentUserId,
+                currentUserRole = currentUserRole,
+                reservationId = null
+            )
+        }
+
+        composable(
+            route = "formreservation/{currentUserId}/{currentUserRole}/{reservationId}",
+            arguments = listOf(
+                navArgument("currentUserId") { type = NavType.IntType },
+                navArgument("currentUserRole") { type = NavType.StringType },
+                navArgument("reservationId") { type = NavType.IntType }
+            )
+        ) { backStackEntry ->
+            val currentUserId = backStackEntry.arguments?.getInt("currentUserId") ?: -1
+            val currentUserRole = dec(backStackEntry.arguments?.getString("currentUserRole"))
+            val reservationId = backStackEntry.arguments?.getInt("reservationId")
+
+            AddReservationScreen(
+                navController = navController,
+                viewModel = gesReservationViewModel,
+                currentUserId = currentUserId,
+                currentUserRole = currentUserRole,
+                reservationId = reservationId
+            )
         }
 
         composable("formreservation") {
             AddReservationScreen(
                 navController = navController,
                 viewModel = gesReservationViewModel,
+                currentUserId = -1,
+                currentUserRole = "",
                 reservationId = null
             )
         }
@@ -156,6 +270,40 @@ fun Navigation() {
             AddReservationScreen(
                 navController = navController,
                 viewModel = gesReservationViewModel,
+                currentUserId = -1,
+                currentUserRole = "",
+                reservationId = reservationId
+            )
+        }
+
+        composable(
+            route = "formreservation/{currentUserId}",
+            arguments = listOf(navArgument("currentUserId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val currentUserId = backStackEntry.arguments?.getInt("currentUserId") ?: -1
+            AddReservationScreen(
+                navController = navController,
+                viewModel = gesReservationViewModel,
+                currentUserId = currentUserId,
+                currentUserRole = "",
+                reservationId = null
+            )
+        }
+
+        composable(
+            route = "formreservation/{currentUserId}/{reservationId}",
+            arguments = listOf(
+                navArgument("currentUserId") { type = NavType.IntType },
+                navArgument("reservationId") { type = NavType.IntType }
+            )
+        ) { backStackEntry ->
+            val currentUserId = backStackEntry.arguments?.getInt("currentUserId") ?: -1
+            val reservationId = backStackEntry.arguments?.getInt("reservationId")
+            AddReservationScreen(
+                navController = navController,
+                viewModel = gesReservationViewModel,
+                currentUserId = currentUserId,
+                currentUserRole = "",
                 reservationId = reservationId
             )
         }

@@ -23,6 +23,10 @@ interface UserRepository {
     /** Obtener un usuario por id */
     suspend fun getUserById(id: Int): User?
 
+    /** Obtener usuario por id_equipo*/
+    fun getUsersByTeamId(teamId: Int): Flow<List<User>>
+    suspend fun clearTeamFromUsers(teamId: Int): Int
+
 
     /** CRUD */
     suspend fun addUser(user: User): User

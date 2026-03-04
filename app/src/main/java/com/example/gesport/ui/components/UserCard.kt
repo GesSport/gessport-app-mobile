@@ -8,6 +8,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -52,56 +53,91 @@ fun UserCard(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
+                Text(
+                    text = user.nombre,
+                    color = Color.White,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
 
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(2.dp)
-                ) {
+                // Email
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.Email,
+                        contentDescription = null,
+                        tint = Color.White.copy(alpha = 0.6f),
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Spacer(Modifier.width(4.dp))
                     Text(
-                        text = user.nombre,
-                        color = Color.White,
-                        fontWeight = FontWeight.SemiBold,
+                        text = user.email,
+                        color = Color.White.copy(alpha = 0.7f),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
+                }
 
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                // Teléfono
+                val phone = user.telefono?.trim().orEmpty()
+                if (phone.isNotBlank()) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            imageVector = Icons.Default.Email,
+                            imageVector = Icons.Default.Phone,
                             contentDescription = null,
                             tint = Color.White.copy(alpha = 0.6f),
                             modifier = Modifier.size(14.dp)
                         )
                         Spacer(Modifier.width(4.dp))
                         Text(
-                            text = user.email,
+                            text = phone,
                             color = Color.White.copy(alpha = 0.7f),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
                     }
+                }
 
-                    // Chip de rol
-                    Box(
-                        modifier = Modifier
-                            .padding(top = 2.dp)
-                            .clip(RoundedCornerShape(18))
-                            .background(tagColor.copy(alpha = 0.75f))
-                            .padding(horizontal = 8.dp, vertical = 2.dp)
-                    ) {
+                // Info jugador: equipo/posición
+                if (user.rol == UserRoles.JUGADOR) {
+                    val equipoId = user.equipoId
+                    val posicion = user.posicion?.trim().orEmpty()
+
+                    if (equipoId != null || posicion.isNotBlank()) {
                         Text(
-                            text = user.rol.uppercase(),
-                            color = Color.White,
-                            fontWeight = FontWeight.SemiBold
+                            text = buildString {
+                                if (equipoId != null) append("Equipo: #$equipoId")
+                                if (equipoId != null && posicion.isNotBlank()) append(" · ")
+                                if (posicion.isNotBlank()) append("Posición: $posicion")
+                            },
+                            color = Color.White.copy(alpha = 0.7f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
+
+                // Chip de rol
+                Box(
+                    modifier = Modifier
+                        .padding(top = 2.dp)
+                        .clip(RoundedCornerShape(18.dp))
+                        .background(tagColor.copy(alpha = 0.75f))
+                        .padding(horizontal = 8.dp, vertical = 2.dp)
+                ) {
+                    Text(
+                        text = user.rol.uppercase(),
+                        color = Color.White,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
             }
+
+            Spacer(Modifier.width(10.dp))
 
             // Botones Editar / Borrar
             Row(

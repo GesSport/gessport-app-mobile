@@ -78,7 +78,7 @@ fun FacilityCard(
                     overflow = TextOverflow.Ellipsis
                 )
 
-                // Deporte debajo del nombre (sin icono, estilo secundario)
+                // Deporte
                 Text(
                     text = sportLabel,
                     color = Color.White.copy(alpha = 0.7f),
@@ -120,7 +120,7 @@ fun FacilityCard(
                         )
                     }
                 } else {
-                    // Si no hay localización, al menos mostramos capacidad con icono
+                    // Si no hay localización mostramos capacidad con icono
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = Icons.Default.Person,
@@ -138,7 +138,7 @@ fun FacilityCard(
                     }
                 }
 
-                // SOLO chip de disponibilidad
+                // Chip de disponibilidad
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(18.dp))

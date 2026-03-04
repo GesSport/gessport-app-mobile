@@ -9,7 +9,6 @@ interface FacilityRepository {
     fun getAllFacilities(): Flow<List<Facility>>
     fun getFacilitiesBySport(sport: String): Flow<List<Facility>>
 
-    // (opcional pero como users: búsqueda desde UI)
     fun searchFacilitiesByName(query: String): Flow<List<Facility>>
 
     /** Obtener instalación por id */

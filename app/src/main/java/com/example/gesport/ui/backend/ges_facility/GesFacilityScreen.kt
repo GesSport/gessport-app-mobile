@@ -92,7 +92,7 @@ fun GesFacilityScreen(
 
                 Spacer(Modifier.height(20.dp))
 
-                // Input Buscar (tu componente)
+                // Input Buscar
                 Input(
                     value = searchQuery,
                     onValueChange = { viewModel.onSearchQueryChange(it) },

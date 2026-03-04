@@ -57,7 +57,7 @@ fun DatePickerField(
             value = value,
             onValueChange = { /* readOnly */ },
             readOnly = true,
-            enabled = false, // evita que el field “se coma” el click
+            enabled = false,
             placeholder = { Text(placeholder, color = Color.White.copy(alpha = 0.65f)) },
             leadingIcon = {
                 Image(
@@ -84,7 +84,7 @@ fun DatePickerField(
             )
         )
 
-        // Overlay clickable SOLO del tamaño del campo (no tapa el resto de la pantalla)
+        // Overlay clickable
         Box(
             modifier = Modifier
                 .fillMaxWidth()
